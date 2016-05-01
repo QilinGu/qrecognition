@@ -25,16 +25,27 @@ int main(int argc, char *argv[])
 
     Classifier classifier(model_file, trained_file, mean_file, label_file);
 
-    string img_file = "/home/gkirg/projects/compvis/analyze/own_data/00005.ppm";
+    /* Load images */
+    int batch_size = 3;
+    int topN = 3;
+    vector<cv::Mat> imgs;
+    for (int i = 0; i < batch_size; ++i) {
+        string img_file = "/home/gkirg/projects/compvis/analyze/own_data/0000" + to_string(i+1) + ".ppm";
+        cv::Mat img = cv::imread(img_file, -1);
+        CHECK(!img.empty()) << "Unable to decode image " << img_file;
+        imgs.push_back(img);
+    }
 
-    cv::Mat img = cv::imread(img_file, -1);
-    CHECK(!img.empty()) << "Unable to decode image " << img_file;
-    auto predictions = classifier.Classify(img, 5);
+    auto predictions = classifier.Classify(imgs, topN);
 
-    /* Print the top N predictions. */
-    for (size_t i = 0; i < predictions.size(); ++i) {
-        Prediction p = predictions[i];
-        cout << std::fixed << std::setprecision(4) << p.second << " - " << p.first << endl;
+    /* Print the topN predictions for every image */
+    for (unsigned int j = 0; j < predictions.size(); ++j) {
+        for (int i = 0; i < topN; ++i) {
+            Prediction p = predictions[j][i];
+            cout << "img " << j << ": "
+                 << std::fixed << std::setprecision(4) << p.second << " - " << p.first << endl;
+        }
+        cout << endl;
     }
 
 //    return a.exec();
