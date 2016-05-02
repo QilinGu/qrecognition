@@ -10,12 +10,7 @@
 using namespace std;
 using namespace caffe;
 
-int main(int argc, char *argv[])
-{
-//    QApplication a(argc, argv);
-//    MainWindow w;
-//    w.show();
-
+void testPredict() {
     string work_dir = "/home/gkirg/projects/compvis/caffe/gtsrb/finetuning/";
 
     string model_file   = work_dir + "resnet/ResNet-152-deploy_ft96.prototxt";
@@ -47,7 +42,14 @@ int main(int argc, char *argv[])
         }
         cout << endl;
     }
+}
 
-//    return a.exec();
-    return 0;
+int main(int argc, char *argv[])
+{
+    QApplication a(argc, argv);
+    MainWindow w;
+    w.show();
+
+
+    return a.exec();
 }

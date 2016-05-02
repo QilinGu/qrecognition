@@ -80,7 +80,7 @@ void Classifier::SetMean(const string &mean_file) {
     mean_ = cv::Mat(input_geometry_, mean.type(), channel_mean);
 }
 
-std::vector<std::vector<Prediction> > Classifier::Classify(const std::vector<cv::Mat> &imgs, int topN) {
+vector<vector<Prediction> > Classifier::Classify(const vector<cv::Mat> &imgs, int topN) {
     auto output = Predict(imgs);
     vector<vector<Prediction> > predictions;
     topN = min<int>(labels_.size(), topN);
@@ -97,7 +97,7 @@ std::vector<std::vector<Prediction> > Classifier::Classify(const std::vector<cv:
     return predictions;
 }
 
-std::vector<std::vector<float> > Classifier::Predict(const std::vector<cv::Mat> &imgs) {
+vector<vector<float> > Classifier::Predict(const vector<cv::Mat> &imgs) {
     Blob<float>* input_layer = net_->input_blobs()[0];
 
     //TODO: case when batch > max_batch
@@ -130,7 +130,7 @@ std::vector<std::vector<float> > Classifier::Predict(const std::vector<cv::Mat> 
  * don't need to rely on cudaMemcpy2D. The last preprocessing
  * operation will write the separate channels directly to the input
  * layer. */
-void Classifier::WrapInputLayer(std::vector<cv::Mat>* input_channels, int batch_size) {
+void Classifier::WrapInputLayer(vector<cv::Mat>* input_channels, int batch_size) {
     Blob<float> *input_layer = net_->input_blobs()[0];
 
     int width = input_layer->width();
