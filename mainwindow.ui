@@ -81,7 +81,11 @@
         </widget>
        </item>
        <item row="0" column="0" colspan="2">
-        <widget class="QTextEdit" name="outputTextPanel"/>
+        <widget class="QTextEdit" name="outputTextPanel">
+         <property name="readOnly">
+          <bool>true</bool>
+         </property>
+        </widget>
        </item>
       </layout>
      </widget>

@@ -14,8 +14,7 @@ using namespace std;
 Classifier::Classifier(
             const string &model_file,
             const string &weights_file,
-            const string &mean_img_file,
-            const string &labels_file)
+            const string &mean_img_file)
     : max_batch_size_(12)
 {
 #ifdef CPU_ONLY
@@ -36,19 +35,13 @@ Classifier::Classifier(
     CHECK(num_channels_ == 3 || num_channels_ == 1) << "Input layer should have 1 or 3 channels.";
     input_geometry_ = cv::Size(input_layer->width(), input_layer->height());
 
-    /* Load the binaryproto mean file. */
-    SetMean(mean_img_file);
-
-    /* Load labels. */
-    ifstream labels(labels_file.c_str());
-    CHECK(labels) << "Unable to open labels file " << labels_file;
-    string line;
-    while (getline(labels, line))
-        labels_.push_back(string(line));
-
-    Blob<float>* output_layer = net_->output_blobs()[0];
-    CHECK_EQ(labels_.size(), output_layer->channels())
-        << "Number of labels is different from the output layer dimension.";
+    if (!mean_img_file.empty()) {
+        /* Load the binaryproto mean file. */
+        SetMean(mean_img_file);
+    } else {
+        //TODO: test it
+        mean_ = cv::Mat::zeros(input_geometry_, CV_64F, double(0));
+    }
 }
 
 void Classifier::SetMean(const string &mean_file) {
@@ -83,7 +76,9 @@ void Classifier::SetMean(const string &mean_file) {
 vector<vector<Prediction> > Classifier::Classify(const vector<cv::Mat> &imgs, int topN) {
     auto output = Predict(imgs);
     vector<vector<Prediction> > predictions;
-    topN = min<int>(labels_.size(), topN);
+    //TODO: check output.size
+//    net_->output_blobs()[0]->channels();
+    topN = min<int>(output[0].size(), topN);
 
     for (unsigned int j = 0; j < output.size(); ++j) {
         vector<int> maxN_j = Argmax(output[j], topN);

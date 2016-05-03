@@ -9,6 +9,7 @@
 #include <QGraphicsView>
 #include <QGraphicsVideoItem>
 
+#include "opennetdialog.h"
 #include "frameprober.h"
 #include "processor.h"
 
@@ -30,6 +31,9 @@ public slots:
     void openImage();
     void setVideoPos(int pos);
 
+    void openClassifier();
+    void openDetector();
+
     void mediaStateChanged(QMediaPlayer::State state);
     void positionChanged(qint64 pos);
     void durationChanged(qint64 dur);
@@ -46,6 +50,7 @@ private:
     QGraphicsPixmapItem *img_item;
 
     Ui::MainWindow *ui;
+    OpenNetDialog *net_dialog;
     Processor *proc;
 
     bool isProcessing;

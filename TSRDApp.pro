@@ -20,14 +20,17 @@ SOURCES += main.cpp\
         mainwindow.cpp \
     classifier.cpp \
     processor.cpp \
-    frameprober.cpp
+    frameprober.cpp \
+    opennetdialog.cpp
 
 HEADERS  += mainwindow.h \
     classifier.h \
     processor.h \
-    frameprober.h
+    frameprober.h \
+    opennetdialog.h
 
-FORMS    += mainwindow.ui
+FORMS    += mainwindow.ui \
+    opennetdialog.ui
 
 win32:CONFIG(release, debug|release): LIBS += -L/usr/lib/release/ -lcaffe
 else:win32:CONFIG(debug, debug|release): LIBS += -L/usr/lib/debug/ -lcaffe

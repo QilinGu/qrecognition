@@ -15,14 +15,12 @@ public:
     Classifier(
             const std::string &model_file,
             const std::string &weights_file,
-            const std::string &mean_img_file,
-            const std::string &labels_file);
+            const std::string &mean_img_file = "");
 
     /* Classify images @imgs and output @topN predictions with highest accuracy. */
     std::vector<std::vector<Prediction> > Classify(const std::vector<cv::Mat> &imgs, int topN = 5);
 
 private:
-    std::vector<std::string> labels_;
     std::shared_ptr<caffe::Net<float> > net_;
     int num_channels_;
     int max_batch_size_;

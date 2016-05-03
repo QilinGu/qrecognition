@@ -7,18 +7,20 @@
 #include <QFileDialog>
 #include <QDir>
 
+#include "opennetdialog.h"
+
 using namespace std;
 
 MainWindow::MainWindow(QWidget *parent)
     : QMainWindow(parent)
-    , probThread()
     , procThread()
     , player(new QMediaPlayer())
     , vitem(new QGraphicsVideoItem)
     , probe(new FrameProbe())
     , img_item(nullptr)
     , ui(new Ui::MainWindow)
-    , proc(new Processor(probe, &probThread))
+    , net_dialog(new OpenNetDialog(this))
+    , proc(new Processor(probe))
     , isProcessing(false)
 {
     ui->setupUi(this);
@@ -38,6 +40,8 @@ MainWindow::MainWindow(QWidget *parent)
     ui->pushButtonPlay->setIcon(style()->standardIcon(QStyle::SP_MediaPlay));
     ui->horizontalSliderSeek->setRange(0, 0);
 
+    connect(ui->pushButtonOpenClassifier, &QPushButton::clicked, this, &MainWindow::openClassifier);
+    connect(ui->pushButtonOpenDetector, &QPushButton::clicked, this, &MainWindow::openDetector);
     connect(ui->pushButtonOpenVideo, &QPushButton::clicked, this, &MainWindow::openVideo);
     connect(ui->pushButtonPlay, &QPushButton::clicked, this, &MainWindow::play);
     connect(ui->pushButtonOpenImage, &QPushButton::clicked, this, &MainWindow::openImage);
@@ -64,8 +68,26 @@ MainWindow::~MainWindow()
     delete ui;
 }
 
+//TODO: make user know that it is not okey when net is not loaded
+void MainWindow::openClassifier() {
+    net_dialog->exec();
+
+    if (net_dialog->result() == QDialog::Accepted && net_dialog->isFilesChoosed()) {
+        proc->initClassifier(net_dialog->filePaths());
+    }
+}
+
+//TODO: make user know that it is not okey when net is not loaded
+void MainWindow::openDetector() {
+    net_dialog->exec();
+
+    if (net_dialog->result() == QDialog::Accepted && net_dialog->isFilesChoosed()) {
+        proc->initDetector(net_dialog->filePaths());
+    }
+}
+
 void MainWindow::openVideo() {
-    QString fileName = QFileDialog::getOpenFileName(this, tr("Open"), QDir::homePath());
+    QString fileName = QFileDialog::getOpenFileName(this, tr("Open Video"), QDir::homePath());
 
     if (!fileName.isEmpty()) {
         clear();
@@ -136,7 +158,7 @@ void MainWindow::durationChanged(qint64 duration)
     ui->horizontalSliderSeek->setRange(0, duration);
 }
 
-//TODO: remove starting / pausing to Processor
+//TODO: move starting / pausing to Processor
 void MainWindow::startProcessing()
 {
     if (isProcessing) {
