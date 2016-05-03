@@ -11,11 +11,15 @@ using namespace std;
 
 MainWindow::MainWindow(QWidget *parent)
     : QMainWindow(parent)
+    , probThread()
+    , procThread()
     , player(new QMediaPlayer())
     , vitem(new QGraphicsVideoItem)
-    , probe(new QVideoProbe)
+    , probe(new FrameProbe())
+    , img_item(nullptr)
     , ui(new Ui::MainWindow)
-    , in(new InputCenter(this))
+    , proc(new Processor(probe, &probThread))
+    , isProcessing(false)
 {
     ui->setupUi(this);
 
@@ -38,47 +42,61 @@ MainWindow::MainWindow(QWidget *parent)
     connect(ui->pushButtonPlay, &QPushButton::clicked, this, &MainWindow::play);
     connect(ui->pushButtonOpenImage, &QPushButton::clicked, this, &MainWindow::openImage);
     connect(ui->horizontalSliderSeek, &QSlider::sliderMoved, this, &MainWindow::setVideoPos);
+    connect(ui->pushButtonStartCl, &QPushButton::clicked, this, &MainWindow::startProcessing);
 
     connect(player, &QMediaPlayer::stateChanged, this, &MainWindow::mediaStateChanged);
     connect(player, &QMediaPlayer::positionChanged, this, &MainWindow::positionChanged);
     connect(player, &QMediaPlayer::durationChanged, this, &MainWindow::durationChanged);
 
-    // TODO: set a checking
-    probe->setSource(player);
-    connect(probe, &QVideoProbe::videoFrameProbed, in, &InputCenter::testProcessProbe);
+    cout << "main thread " << QThread::currentThreadId() << endl;
+
+    probe->moveToThread(&procThread);
+    proc->moveToThread(&procThread);
+    connect(probe, &FrameProbe::videoFrameProbed, proc, &Processor::receiveFrame, Qt::DirectConnection);
+    procThread.start();
+
 }
 
 MainWindow::~MainWindow()
 {
+    procThread.quit();
+    procThread.wait();
     delete ui;
 }
 
 void MainWindow::openVideo() {
-    ui->graphicsView->scene()->clear();
-
     QString fileName = QFileDialog::getOpenFileName(this, tr("Open"), QDir::homePath());
 
     if (!fileName.isEmpty()) {
+        clear();
         player->setMedia(QUrl::fromLocalFile(fileName));
         ui->pushButtonPlay->setEnabled(true);
     }
 }
 
 void MainWindow::openImage() {
-    ui->graphicsView->scene()->clear();
-
     QString fileName = QFileDialog::getOpenFileName(this, tr("Open"), QDir::homePath());
 
     if (!fileName.isEmpty()) {
+        clear();
         QImage img(fileName);
 
         if(!img.isNull()) {
             QPixmap pmap(fileName);
-            auto item = new QGraphicsPixmapItem(pmap);
-            ui->graphicsView->scene()->addItem(item);
+            img_item = new QGraphicsPixmapItem(pmap);
+            ui->graphicsView->scene()->addItem(img_item);
             ui->graphicsView->show();
         }
     }
+}
+
+void MainWindow::clear() {
+    if (img_item) {
+        ui->graphicsView->scene()->removeItem(img_item);
+    }
+    player->setMedia(QMediaContent());
+    probe->stopProbing();
+    ui->pushButtonPlay->setEnabled(false);
 }
 
 void MainWindow::play() {
@@ -116,4 +134,14 @@ void MainWindow::positionChanged(qint64 position)
 void MainWindow::durationChanged(qint64 duration)
 {
     ui->horizontalSliderSeek->setRange(0, duration);
+}
+
+//TODO: remove starting / pausing to Processor
+void MainWindow::startProcessing()
+{
+    if (isProcessing) {
+        probe->stopProbing();
+    } else if (!probe->setSource(player)) {
+        qDebug() << "Current QMediaObject doesn't support monitoring video";
+    }
 }

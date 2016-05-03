@@ -8,6 +8,8 @@ QT       += core gui
 QT       += multimedia
 QT       += multimediawidgets
 
+CONFIG   += thread
+
 greaterThan(QT_MAJOR_VERSION, 4): QT += widgets
 
 TARGET = TSRDApp
@@ -16,12 +18,14 @@ TEMPLATE = app
 
 SOURCES += main.cpp\
         mainwindow.cpp \
-    videosurface.cpp \
-    classifier.cpp
+    classifier.cpp \
+    processor.cpp \
+    frameprober.cpp
 
 HEADERS  += mainwindow.h \
-    videosurface.h \
-    classifier.h
+    classifier.h \
+    processor.h \
+    frameprober.h
 
 FORMS    += mainwindow.ui
 
