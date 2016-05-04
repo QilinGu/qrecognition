@@ -35,18 +35,18 @@ void Processor::initDetector(const vector<QString> &filePaths) {
 }
 
 void Processor::loadLabels(const string &labels_file) {
-    vector<string> labels;
+//    vector<string> labels;
 
-    /* Load labels. */
-    ifstream labels(labels_file.c_str());
-    CHECK(labels) << "Unable to open labels file " << labels_file;
-    string line;
-    while (getline(labels, line))
-        labels_.push_back(string(line));
+//    /* Load labels. */
+//    ifstream labels(labels_file.c_str());
+//    CHECK(labels) << "Unable to open labels file " << labels_file;
+//    string line;
+//    while (getline(labels, line))
+//        labels_.push_back(string(line));
 
-    Blob<float>* output_layer = net_->output_blobs()[0];
-    CHECK_EQ(labels_.size(), output_layer->channels())
-        << "Number of labels is different from the output layer dimension.";
+//    Blob<float>* output_layer = net_->output_blobs()[0];
+//    CHECK_EQ(labels_.size(), output_layer->channels())
+//        << "Number of labels is different from the output layer dimension.";
 }
 
 void Processor::receiveFrame(const QVideoFrame &frame) {

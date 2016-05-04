@@ -34,5 +34,5 @@ private:
 
 
     /* just for scratch */
-    void loadLabels(const string &labels_file);
+    void loadLabels(const std::string &labels_file);
 };

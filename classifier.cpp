@@ -40,7 +40,7 @@ Classifier::Classifier(
         SetMean(mean_img_file);
     } else {
         //TODO: test it
-        mean_ = cv::Mat::zeros(input_geometry_, CV_64F, double(0));
+        mean_ = cv::Mat::zeros(input_geometry_, CV_64F);
     }
 }
 
@@ -107,7 +107,8 @@ vector<vector<float> > Classifier::Predict(const vector<cv::Mat> &imgs) {
     WrapInputLayer(&input_channels, batch_size);
     Preprocess(imgs, &input_channels);
 
-    net_->Forward();
+//    net_->Forward();
+    net_->Forward(net_->input_blobs());
 
     /* Copy the output layer to a vector of vectors */
     Blob<float>* output_layer = net_->output_blobs()[0];

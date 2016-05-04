@@ -16,9 +16,9 @@ void testPredict() {
     string model_file   = work_dir + "resnet/ResNet-152-deploy_ft96.prototxt";
     string trained_file = work_dir + "snapshots/resnet-152_ft96_train_iter_9001.caffemodel";
     string mean_file    = work_dir + "resnet/ResNet_mean.binaryproto";
-    string label_file   = work_dir + "gtsrb_labels.txt";
+//    string label_file   = work_dir + "gtsrb_labels.txt";
 
-    Classifier classifier(model_file, trained_file, mean_file, label_file);
+    Classifier classifier(model_file, trained_file, mean_file);
 
     /* Load images */
     int batch_size = 3;
