@@ -55,8 +55,8 @@ void Processor::receiveFrame(const QVideoFrame &frame) {
 //    emit processingStarted();
 
 // There is a processing code.
-//    sleep(1);
-//    cout << "frame processd " << i++ << " " << frame.startTime() << " processed from thread: " << QThread::currentThreadId() << endl;
+    sleep(1);
+    cout << "frame processd " << i++ << " " << frame.startTime() << " processed from thread: " << QThread::currentThreadId() << endl;
 
     probe_->continueProbing();
 //    emit processingFinished();

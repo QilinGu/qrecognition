@@ -33,6 +33,8 @@ private:
     FrameProbe *probe_;
 
 
-    /* just for scratch */
+    int i = 0;
+
+    /* TODO: this method is just for scratch */
     void loadLabels(const std::string &labels_file);
 };

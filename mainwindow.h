@@ -4,10 +4,13 @@
 
 #include <QThread>
 #include <QMainWindow>
+
 #include <QMediaPlayer>
 #include <QVideoProbe>
 #include <QGraphicsView>
 #include <QGraphicsVideoItem>
+
+#include <QCamera>
 
 #include "opennetdialog.h"
 #include "frameprober.h"
@@ -29,6 +32,7 @@ public slots:
     void play();
     void openVideo();
     void openImage();
+    void setCamera();
     void setVideoPos(int pos);
 
     void openClassifier();
@@ -40,14 +44,18 @@ public slots:
 
 private slots:
     void startProcessing();
+    void resizeEvent(QResizeEvent *event) override;
+    bool eventFilter(QObject *obj, QEvent *ev) override;
 
 private:
     QThread procThread;
 
+    QGraphicsScene *scene;
     QMediaPlayer *player;
     QGraphicsVideoItem *vitem;
     FrameProbe *probe;
     QGraphicsPixmapItem *img_item;
+    QCamera *camera;
 
     Ui::MainWindow *ui;
     OpenNetDialog *net_dialog;
