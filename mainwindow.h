@@ -43,11 +43,13 @@ public slots:
     void durationChanged(qint64 dur);
 
 private slots:
-    void startProcessing();
+    void changeStateProbing();
     void resizeEvent(QResizeEvent *event) override;
     bool eventFilter(QObject *obj, QEvent *ev) override;
 
 private:
+    void clear();
+
     QThread procThread;
     QThread probThread;
 
@@ -60,9 +62,4 @@ private:
     Ui::MainWindow *ui;
     OpenNetDialog *net_dialog;
     Processor *proc;
-
-    bool isProcessing;
-
-
-    void clear();
 };

@@ -3,6 +3,7 @@
 #include <QAbstractVideoSurface>
 #include <QGraphicsPixmapItem>
 #include <QVideoFrame>
+#include <QVideoSurfaceFormat>
 
 class FrameProbeVSurface : public QAbstractVideoSurface
 {
@@ -12,6 +13,11 @@ public:
 
     QList<QVideoFrame::PixelFormat> supportedPixelFormats(QAbstractVideoBuffer::HandleType handleType) const override;
     bool present(const QVideoFrame &frame) override;
+    bool start(const QVideoSurfaceFormat &format) override;
+
+    bool presentImage(QImage img);
+
+    bool isProbing();
 
 signals:
 //    void frameProbed(const QVideoFrame &frame);
@@ -25,5 +31,7 @@ private:
     bool isProbing_;
     QList<QVideoFrame::PixelFormat> supportedPixelFormats_;
     QGraphicsPixmapItem *img_item_;
+
+    int i = 0;
 
 };

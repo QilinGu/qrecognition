@@ -55,11 +55,11 @@ void Processor::loadLabels(const string &labels_file) {
 void Processor::receiveFrame(QImage frame) {
 
 //    probe_->stopProbing();
-    emit processingStarted();
+//    emit processingStarted();
 
 // There is a processing code.
     sleep(1);
-    cout << "frame processd " << i++ << " " << frame.isNull() << " processed from thread: " << QThread::currentThreadId() << endl;
+    cout << "frame processd " << " " << frame.isNull() << " processed from thread: " << QThread::currentThreadId() << endl;
 
 //    probe_->continueProbing();
     emit processingFinished();

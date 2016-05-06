@@ -1,5 +1,6 @@
 #include <iostream>
 
+#include <QThread>
 #include <QImage>
 
 #include "frameprobevsurface.h"
@@ -61,14 +62,36 @@ bool FrameProbeVSurface::present(const QVideoFrame &frame)
         if (!img.isNull()) {
             img_item_->setPixmap(QPixmap::fromImage(img));
 
+            ++i;
             if (isProbing_) {
+                stopProbing();
                 emit frameProbed(img);
-                /*dbg*/std::cout << "presented" << std::endl;
+                std::cout << "frame " << i << " presented" << std::endl;
             }
             return true;
         }
     }
     return false;
+}
+
+bool FrameProbeVSurface::presentImage(QImage img) {
+    if (!img.isNull()) {
+        img_item_->setPixmap(QPixmap::fromImage(img));
+
+        if (isProbing_) {
+            emit frameProbed(img);
+        }
+        return true;
+    }
+    return false;
+}
+
+bool FrameProbeVSurface::isProbing() {
+    return isProbing_;
+}
+
+bool FrameProbeVSurface::start(const QVideoSurfaceFormat &format) {
+    return QAbstractVideoSurface::start(format);
 }
 
 void FrameProbeVSurface::startProbing() {
