@@ -7,6 +7,7 @@
 QT       += core gui
 QT       += multimedia
 QT       += multimediawidgets
+QT       += concurrent
 
 CONFIG   += thread
 
@@ -20,16 +21,16 @@ SOURCES += main.cpp\
         mainwindow.cpp \
     classifier.cpp \
     processor.cpp \
-    frameprober.cpp \
     opennetdialog.cpp \
-    util.cpp
+    util.cpp \
+    frameprobevsurface.cpp
 
 HEADERS  += mainwindow.h \
     classifier.h \
     processor.h \
-    frameprober.h \
     opennetdialog.h \
-    util.h
+    util.h \
+    frameprobevsurface.h
 
 FORMS    += mainwindow.ui \
     opennetdialog.ui

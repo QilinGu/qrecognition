@@ -7,14 +7,13 @@
 #include <QThread>
 #include <QVideoFrame>
 
-#include "frameprober.h"
 #include "classifier.h"
 
 class Processor : public QObject
 {
     Q_OBJECT
 public:
-    Processor(FrameProbe *probe_, QObject *parent = 0);
+    explicit Processor(QObject *parent = 0);
     ~Processor();
 
 signals:
@@ -22,7 +21,8 @@ signals:
     void processingFinished();
 
 public slots:
-    void receiveFrame(const QVideoFrame &frame);
+//    void receiveFrame(const QVideoFrame &frame);
+    void receiveFrame(QImage frame);
 
     void initClassifier(const std::vector<QString> &filePaths);
     void initDetector(const std::vector<QString> &filePaths);
@@ -30,7 +30,6 @@ public slots:
 private:
     Classifier *cl_;
     Classifier *dt_;
-    FrameProbe *probe_;
 
 
     int i = 0;

@@ -3,6 +3,8 @@
 
 #include <iostream>
 
+#include <QtConcurrent>
+#include <QFuture>
 #include <QUrl>
 #include <QFileDialog>
 #include <QDir>
@@ -16,14 +18,13 @@ using namespace std;
 MainWindow::MainWindow(QWidget *parent)
     : QMainWindow(parent)
     , procThread()
+    , probThread()
     , player(new QMediaPlayer())
-    , vitem(new QGraphicsVideoItem)
-    , probe(new FrameProbe())
-    , img_item(nullptr)
+    , vitem(new QGraphicsPixmapItem())
     , camera(nullptr)
     , ui(new Ui::MainWindow)
     , net_dialog(new OpenNetDialog(this))
-    , proc(new Processor(probe))
+    , proc(new Processor())
     , isProcessing(false)
 {
     ui->setupUi(this);
@@ -31,12 +32,10 @@ MainWindow::MainWindow(QWidget *parent)
     scene = new QGraphicsScene(this);
 //    ui->graphicsView->setGeometry(0, 0, 592, 478);
     ui->graphicsView->setScene(scene);
-    ui->graphicsView->show();
 
 //    vitem->setPos(0, 0);
     scene->addItem(vitem);
-    ui->graphicsView->fitInView(vitem);
-    player->setVideoOutput(vitem);
+    probe = new FrameProbeVSurface(vitem);
 
     ui->pushButtonPlay->setEnabled(false);
     ui->pushButtonPlay->setIcon(style()->standardIcon(QStyle::SP_MediaPlay));
@@ -59,18 +58,23 @@ MainWindow::MainWindow(QWidget *parent)
 
     ui->graphicsView->viewport()->installEventFilter(this);
 
-//    cout << "main thread " << QThread::currentThreadId() << endl;
+    cout << "main thread " << QThread::currentThreadId() << endl;
 
     //TODO: maybe this is Processor logic?
-    probe->moveToThread(&procThread);
     proc->moveToThread(&procThread);
-    connect(probe, &FrameProbe::videoFrameProbed, proc, &Processor::receiveFrame, Qt::DirectConnection);
+    probe->moveToThread(&probThread);
+    connect(proc, &Processor::processingStarted, probe, &FrameProbeVSurface::stopProbing, Qt::QueuedConnection);
+    connect(proc, &Processor::processingFinished, probe, &FrameProbeVSurface::startProbing, Qt::QueuedConnection);
+    connect(probe, &FrameProbeVSurface::frameProbed, proc, &Processor::receiveFrame, Qt::QueuedConnection);
     procThread.start();
+    probThread.start();
 
 }
 
 MainWindow::~MainWindow()
 {
+    probThread.quit();
+    probThread.wait();
     procThread.quit();
     procThread.wait();
     delete ui;
@@ -88,11 +92,7 @@ bool MainWindow::eventFilter(QObject *obj, QEvent *ev) {
 void MainWindow::resizeEvent(QResizeEvent *event) {
     Q_UNUSED(event)
 
-    if (img_item) {
-        ui->graphicsView->fitInView(img_item, Qt::KeepAspectRatio);
-    } else {
-        ui->graphicsView->fitInView(vitem, Qt::KeepAspectRatio);
-    }
+    ui->graphicsView->fitInView(vitem, Qt::KeepAspectRatio);
 }
 
 //TODO: make user know that it is not okey when net is not loaded
@@ -119,29 +119,18 @@ void MainWindow::openVideo() {
 
     if (!fileName.isEmpty()) {
         clear();
+//        auto media = new QMediaContent(QUrl::fromLocalFile(fileName));
+//        QFuture<void> f = QtConcurrent::run(player, &QMediaPlayer::setMedia, media);
+//        QFuture<void> f2 = QtConcurrent::run(player, &QMediaPlayer::setVideoOutput, probe);
+
         player->setMedia(QUrl::fromLocalFile(fileName));
+        player->setVideoOutput(probe);
+        player->play();
+//        QFuture<void> f3 = QtConcurrent::run(player, &QMediaPlayer::play);
         ui->pushButtonPlay->setEnabled(true);
 
-        vitem->setSize(QSizeF(ui->graphicsView->rect().size()));
-    }
-}
-
-void MainWindow::openImage() {
-    QString fileName = QFileDialog::getOpenFileName(this,
-        tr("Open Image"), QDir::homePath(), tr("Image Files (*)"));
-
-    if (!fileName.isEmpty()) {
-        clear();
-        QImage img(fileName);
-
-        if(!img.isNull()) {
-            img_item = new QGraphicsPixmapItem(QPixmap::fromImage(img));
-            scene->setSceneRect(QRectF()); //reinit scene for normal image resizing
-            scene->addItem(img_item);
-            ui->graphicsView->show();
-
-            ui->graphicsView->fitInView(img_item, Qt::KeepAspectRatio);
-        }
+//        vitem->setSize(QSizeF(ui->graphicsView->rect().size()));
+        ui->graphicsView->fitInView(vitem, Qt::KeepAspectRatio);
     }
 }
 
@@ -153,24 +142,36 @@ void MainWindow::setCamera() {
     if (cameras.count() == 1) {
         camera = new QCamera(cameras.at(0));
     } else {
-        //TODO:
-        //dialog to choose camera
+        //TODO: dialog to choose camera
         camera = new QCamera();
     }
 
-    vitem->setSize(QSizeF(ui->graphicsView->rect().size()));
-//    camera->setCaptureMode(QCamera::CaptureVideo);
-    camera->setViewfinder(vitem);
+    camera->setViewfinder(probe);
     camera->start();
+
+//    vitem->setSize(QSizeF(ui->graphicsView->rect().size()));
+    ui->graphicsView->fitInView(vitem, Qt::KeepAspectRatio);
+}
+
+void MainWindow::openImage() {
+    QString fileName = QFileDialog::getOpenFileName(this,
+        tr("Open Image"), QDir::homePath(), tr("Image Files (*)"));
+
+    if (!fileName.isEmpty()) {
+        clear();
+        QImage img(fileName);
+
+        if(!img.isNull()) {
+            vitem->setPixmap(QPixmap::fromImage(img));
+//            scene->setSceneRect(QRectF()); //reinit scene for normal image resizing
+//            ui->graphicsView->show();
+
+            ui->graphicsView->fitInView(vitem, Qt::KeepAspectRatio);
+        }
+    }
 }
 
 void MainWindow::clear() {
-    if (img_item) {
-        ui->graphicsView->scene()->removeItem(img_item);
-        delete img_item;
-        img_item = nullptr;
-    }
-
     if (camera) {
         camera->stop();
         delete camera;
@@ -227,10 +228,8 @@ void MainWindow::startProcessing()
     if (isProcessing) {
         isProcessing = false;
         probe->stopProbing();
-    } else if (camera) {
-        if (!probe->setSource(camera))
-            qDebug() << "Current QMediaObject doesn't support monitoring video";
-    } else if (!probe->setSource(player)) {
-        qDebug() << "Current QMediaObject doesn't support monitoring video";
+    } else {
+        isProcessing = true;
+        probe->startProbing();
     }
 }

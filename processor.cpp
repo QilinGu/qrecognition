@@ -2,20 +2,23 @@
 
 #include <iostream>
 
+#include <QImage>
+
 using namespace std;
 
-Processor::Processor(FrameProbe *probe, QObject *parent)
+Processor::Processor(QObject *parent)
     : QObject(parent)
     , cl_(nullptr)
     , dt_(nullptr)
-    , probe_(probe)
 {
 
 }
 
 Processor::~Processor() {
-    delete cl_;
-    delete dt_;
+    if (!cl_)
+        delete cl_;
+    if (!dt_)
+        delete dt_;
 }
 
 void Processor::initClassifier(const vector<QString> &filePaths) {
@@ -49,17 +52,17 @@ void Processor::loadLabels(const string &labels_file) {
 //        << "Number of labels is different from the output layer dimension.";
 }
 
-void Processor::receiveFrame(const QVideoFrame &frame) {
+void Processor::receiveFrame(QImage frame) {
 
-    probe_->stopProbing();
-//    emit processingStarted();
+//    probe_->stopProbing();
+    emit processingStarted();
 
 // There is a processing code.
     sleep(1);
-    cout << "frame processd " << i++ << " " << frame.startTime() << " processed from thread: " << QThread::currentThreadId() << endl;
+    cout << "frame processd " << i++ << " " << frame.isNull() << " processed from thread: " << QThread::currentThreadId() << endl;
 
-    probe_->continueProbing();
-//    emit processingFinished();
+//    probe_->continueProbing();
+    emit processingFinished();
 
 }
 

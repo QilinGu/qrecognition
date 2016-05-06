@@ -13,7 +13,7 @@
 #include <QCamera>
 
 #include "opennetdialog.h"
-#include "frameprober.h"
+#include "frameprobevsurface.h"
 #include "processor.h"
 
 namespace Ui {
@@ -49,12 +49,12 @@ private slots:
 
 private:
     QThread procThread;
+    QThread probThread;
 
     QGraphicsScene *scene;
     QMediaPlayer *player;
-    QGraphicsVideoItem *vitem;
-    FrameProbe *probe;
-    QGraphicsPixmapItem *img_item;
+    FrameProbeVSurface *probe;
+    QGraphicsPixmapItem *vitem;
     QCamera *camera;
 
     Ui::MainWindow *ui;
