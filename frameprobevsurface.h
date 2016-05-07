@@ -20,15 +20,16 @@ public:
     bool isProbing();
 
 signals:
-//    void frameProbed(const QVideoFrame &frame);
     void frameProbed(QImage frame);
 
 public slots:
-    void startProbing();
-    void stopProbing();
+    void continueProbing();
+    void pauseProbing();
+    void changeStateProbing();
 
 private:
     bool isProbing_;
+    bool isPaused_;
     QList<QVideoFrame::PixelFormat> supportedPixelFormats_;
     QGraphicsPixmapItem *img_item_;
 

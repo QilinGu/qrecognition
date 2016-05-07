@@ -1,15 +1,17 @@
 #include "processor.h"
 
 #include <iostream>
+#include <chrono>
 
 #include <QImage>
 
 using namespace std;
 
-Processor::Processor(QObject *parent)
+Processor::Processor(FrameProbeVSurface *probe, QObject *parent)
     : QObject(parent)
     , cl_(nullptr)
     , dt_(nullptr)
+    , probe_(probe)
 {
 
 }
@@ -54,15 +56,20 @@ void Processor::loadLabels(const string &labels_file) {
 
 void Processor::receiveFrame(QImage frame) {
 
-//    probe_->stopProbing();
+    probe_->pauseProbing();
 //    emit processingStarted();
 
 // There is a processing code.
-    sleep(1);
-    cout << "frame processd " << " " << frame.isNull() << " processed from thread: " << QThread::currentThreadId() << endl;
+    auto now = std::chrono::high_resolution_clock::now();
+    auto now_ms = std::chrono::time_point_cast<std::chrono::microseconds>(now);
+    auto val = now_ms.time_since_epoch();
+    long dur = val.count();
 
-//    probe_->continueProbing();
-    emit processingFinished();
+    cout << "frame     received  at " << dur << endl;
+    sleep(1);
+
+    probe_->continueProbing();
+//    emit processingFinished();
 
 }
 

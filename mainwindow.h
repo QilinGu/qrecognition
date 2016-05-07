@@ -6,7 +6,6 @@
 #include <QMainWindow>
 
 #include <QMediaPlayer>
-#include <QVideoProbe>
 #include <QGraphicsView>
 #include <QGraphicsVideoItem>
 
@@ -43,7 +42,6 @@ public slots:
     void durationChanged(qint64 dur);
 
 private slots:
-    void changeStateProbing();
     void resizeEvent(QResizeEvent *event) override;
     bool eventFilter(QObject *obj, QEvent *ev) override;
 

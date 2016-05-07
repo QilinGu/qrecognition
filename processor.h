@@ -4,24 +4,22 @@
 
 #include <QObject>
 #include <QString>
-#include <QThread>
-#include <QVideoFrame>
 
 #include "classifier.h"
+#include "frameprobevsurface.h"
 
 class Processor : public QObject
 {
     Q_OBJECT
 public:
-    explicit Processor(QObject *parent = 0);
+    Processor(FrameProbeVSurface *probe, QObject *parent = 0);
     ~Processor();
 
 signals:
-    void processingStarted();
-    void processingFinished();
+//    void processingStarted();
+//    void processingFinished();
 
 public slots:
-//    void receiveFrame(const QVideoFrame &frame);
     void receiveFrame(QImage frame);
 
     void initClassifier(const std::vector<QString> &filePaths);
@@ -30,6 +28,7 @@ public slots:
 private:
     Classifier *cl_;
     Classifier *dt_;
+    FrameProbeVSurface *probe_;
 
 
     int i = 0;

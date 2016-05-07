@@ -3,8 +3,6 @@
 
 #include <iostream>
 
-#include <QtConcurrent>
-#include <QFuture>
 #include <QUrl>
 #include <QFileDialog>
 #include <QDir>
@@ -24,7 +22,7 @@ MainWindow::MainWindow(QWidget *parent)
     , camera(nullptr)
     , ui(new Ui::MainWindow)
     , net_dialog(new OpenNetDialog(this))
-    , proc(new Processor())
+    , proc(nullptr)
 {
     ui->setupUi(this);
 
@@ -33,6 +31,7 @@ MainWindow::MainWindow(QWidget *parent)
 //    vitem->setPos(0, 0);
     scene->addItem(vitem);
     probe = new FrameProbeVSurface(vitem);
+    proc = new Processor(probe);
 
     ui->pushButtonPlay->setEnabled(false);
     ui->pushButtonPlay->setIcon(style()->standardIcon(QStyle::SP_MediaPlay));
@@ -44,7 +43,7 @@ MainWindow::MainWindow(QWidget *parent)
     connect(ui->pushButtonPlay, &QPushButton::clicked, this, &MainWindow::play);
     connect(ui->pushButtonOpenImage, &QPushButton::clicked, this, &MainWindow::openImage);
     connect(ui->horizontalSliderSeek, &QSlider::sliderMoved, this, &MainWindow::setVideoPos);
-    connect(ui->pushButtonStartCl, &QPushButton::clicked, this, &MainWindow::changeStateProbing);
+    connect(ui->pushButtonStartCl, &QPushButton::clicked, probe, &FrameProbeVSurface::changeStateProbing);
 
     connect(ui->pushButtonCamera, &QPushButton::clicked, this, &MainWindow::setCamera);
     ui->pushButtonCamera->setEnabled( QCameraInfo::availableCameras().count() > 0 );
@@ -56,20 +55,15 @@ MainWindow::MainWindow(QWidget *parent)
     ui->graphicsView->viewport()->installEventFilter(this);
 
     cout << "main thread " << QThread::currentThreadId() << endl;
+    ui->pushButtonOpenVideo->setEnabled(false); // ...as this doesn't work
 
     proc->moveToThread(&procThread);
-//    probe->moveToThread(&probThread);
-    connect(proc, &Processor::processingStarted, probe, &FrameProbeVSurface::stopProbing, Qt::DirectConnection);
-    connect(proc, &Processor::processingFinished, probe, &FrameProbeVSurface::startProbing, Qt::DirectConnection);
     connect(probe, &FrameProbeVSurface::frameProbed, proc, &Processor::receiveFrame, Qt::QueuedConnection);
     procThread.start();
-//    probThread.start();
 }
 
 MainWindow::~MainWindow()
 {
-    probThread.quit();
-    probThread.wait();
     procThread.quit();
     procThread.wait();
     delete ui;
@@ -141,7 +135,7 @@ void MainWindow::setCamera() {
     camera->start();
 
 //    vitem->setSize(QSizeF(ui->graphicsView->rect().size()));
-//    ui->graphicsView->fitInView(vitem, Qt::KeepAspectRatio);
+    ui->graphicsView->fitInView(vitem, Qt::KeepAspectRatio);
 }
 
 void MainWindow::openImage() {
@@ -150,8 +144,8 @@ void MainWindow::openImage() {
 
     if (!filename.isEmpty()) {
         clear();
-        probe->startProbing();
         probe->presentImage(QImage(filename));
+
         ui->graphicsView->fitInView(vitem, Qt::KeepAspectRatio);
     }
 }
@@ -163,7 +157,6 @@ void MainWindow::clear() {
         camera = nullptr;
     }
 
-    probe->stopProbing();
     player->setMedia(QMediaContent());
     ui->pushButtonPlay->setEnabled(false);
 }
@@ -203,13 +196,4 @@ void MainWindow::positionChanged(qint64 position)
 void MainWindow::durationChanged(qint64 duration)
 {
     ui->horizontalSliderSeek->setRange(0, duration);
-}
-
-void MainWindow::changeStateProbing()
-{
-    if (probe->isProbing()) {
-        probe->stopProbing();
-    } else {
-        probe->startProbing();
-    }
 }

@@ -1,14 +1,17 @@
+#include "frameprobevsurface.h"
+
 #include <iostream>
+#include <chrono>
 
 #include <QThread>
 #include <QImage>
 
-#include "frameprobevsurface.h"
 #include "util.h"
 
 FrameProbeVSurface::FrameProbeVSurface(QGraphicsPixmapItem *display, QObject *parent)
     : QAbstractVideoSurface(parent)
     , isProbing_(false)
+    , isPaused_(false)
     , supportedPixelFormats_()
     , img_item_(display)
 {
@@ -63,10 +66,15 @@ bool FrameProbeVSurface::present(const QVideoFrame &frame)
             img_item_->setPixmap(QPixmap::fromImage(img));
 
             ++i;
-            if (isProbing_) {
-                stopProbing();
-                emit frameProbed(img);
-                std::cout << "frame " << i << " presented" << std::endl;
+            if (isProbing_ && !isPaused_) {
+
+                auto now = std::chrono::high_resolution_clock::now();
+                auto now_ms = std::chrono::time_point_cast<std::chrono::microseconds>(now);
+                auto val = now_ms.time_since_epoch();
+                long dur = val.count();
+
+                emit frameProbed(img); // latency between sending and receiving is about 60 microseconds
+                std::cout << "frame " << i << " presented at " << dur << std::endl;
             }
             return true;
         }
@@ -77,10 +85,7 @@ bool FrameProbeVSurface::present(const QVideoFrame &frame)
 bool FrameProbeVSurface::presentImage(QImage img) {
     if (!img.isNull()) {
         img_item_->setPixmap(QPixmap::fromImage(img));
-
-        if (isProbing_) {
-            emit frameProbed(img);
-        }
+        emit frameProbed(img);
         return true;
     }
     return false;
@@ -94,10 +99,14 @@ bool FrameProbeVSurface::start(const QVideoSurfaceFormat &format) {
     return QAbstractVideoSurface::start(format);
 }
 
-void FrameProbeVSurface::startProbing() {
-    isProbing_ = true;
+void FrameProbeVSurface::continueProbing() {
+    isPaused_ = false;
 }
 
-void FrameProbeVSurface::stopProbing() {
-    isProbing_ = false;
+void FrameProbeVSurface::pauseProbing() {
+    isPaused_ = true;
+}
+
+void FrameProbeVSurface::changeStateProbing() {
+    isProbing_ = !isProbing_;
 }
