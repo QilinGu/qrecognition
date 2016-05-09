@@ -23,14 +23,20 @@ SOURCES += main.cpp\
     processor.cpp \
     opennetdialog.cpp \
     util.cpp \
-    frameprobevsurface.cpp
+    frameprobevsurface.cpp \
+    caffenetbuilder.cpp
 
 HEADERS  += mainwindow.h \
     classifier.h \
     processor.h \
     opennetdialog.h \
     util.h \
-    frameprobevsurface.h
+    frameprobevsurface.h \
+    abstractclassifier.h \
+    abstractdetector.h \
+    abstractclassifierbuilder.h \
+    abstractdetectorbuilder.h \
+    caffenetbuilder.h
 
 FORMS    += mainwindow.ui \
     opennetdialog.ui
@@ -80,3 +86,7 @@ else:unix: LIBS += -L/usr/lib/ -lopencv_imgcodecs
 INCLUDEPATH += /usr/include
 DEPENDPATH += /usr/include
 
+
+win32:CONFIG(release, debug|release): LIBS += -L$$PWD/../../../../../usr/lib/release/ -lopencv_xobjdetect
+else:win32:CONFIG(debug, debug|release): LIBS += -L$$PWD/../../../../../usr/lib/debug/ -lopencv_xobjdetect
+else:unix: LIBS += -L$$PWD/../../../../../usr/lib/ -lopencv_xobjdetect

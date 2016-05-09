@@ -2,7 +2,6 @@
 
 #include <opencv/cv.hpp>
 #include <opencv/highgui.h>
-//#include <opencv/cvwimage.h>
 
 #include <algorithm>
 #include <iosfwd>
@@ -37,14 +36,14 @@ Classifier::Classifier(
 
     if (!mean_img_file.empty()) {
         /* Load the binaryproto mean file. */
-        SetMean(mean_img_file);
+        setMean(mean_img_file);
     } else {
         //TODO: test it
         mean_ = cv::Mat::zeros(input_geometry_, CV_64F);
     }
 }
 
-void Classifier::SetMean(const string &mean_file) {
+void Classifier::setMean(const string &mean_file) {
     BlobProto blob_proto;
     ReadProtoFromBinaryFileOrDie(mean_file.c_str(), &blob_proto);
 
@@ -73,15 +72,15 @@ void Classifier::SetMean(const string &mean_file) {
     mean_ = cv::Mat(input_geometry_, mean.type(), channel_mean);
 }
 
-vector<vector<Prediction> > Classifier::Classify(const vector<cv::Mat> &imgs, int topN) {
-    auto output = Predict(imgs);
+vector<vector<Prediction> > Classifier::classify(const vector<cv::Mat> &imgs, int topN) {
+    auto output = predict(imgs);
     vector<vector<Prediction> > predictions;
     //TODO: check output.size
 //    net_->output_blobs()[0]->channels();
     topN = min<int>(output[0].size(), topN);
 
     for (unsigned int j = 0; j < output.size(); ++j) {
-        vector<int> maxN_j = Argmax(output[j], topN);
+        vector<int> maxN_j = argmax(output[j], topN);
         predictions.push_back(vector<Prediction>());
 
         for (int i = 0; i < topN; ++i) {
@@ -92,7 +91,7 @@ vector<vector<Prediction> > Classifier::Classify(const vector<cv::Mat> &imgs, in
     return predictions;
 }
 
-vector<vector<float> > Classifier::Predict(const vector<cv::Mat> &imgs) {
+vector<vector<float> > Classifier::predict(const vector<cv::Mat> &imgs) {
     Blob<float>* input_layer = net_->input_blobs()[0];
 
     //TODO: case when batch > max_batch
@@ -104,8 +103,8 @@ vector<vector<float> > Classifier::Predict(const vector<cv::Mat> &imgs) {
     net_->Reshape();
 
     vector<cv::Mat> input_channels;
-    WrapInputLayer(&input_channels, batch_size);
-    Preprocess(imgs, &input_channels);
+    wrapInputLayer(&input_channels, batch_size);
+    preprocess(imgs, &input_channels);
 
 //    net_->Forward();
     net_->Forward(net_->input_blobs());
@@ -126,7 +125,7 @@ vector<vector<float> > Classifier::Predict(const vector<cv::Mat> &imgs) {
  * don't need to rely on cudaMemcpy2D. The last preprocessing
  * operation will write the separate channels directly to the input
  * layer. */
-void Classifier::WrapInputLayer(vector<cv::Mat>* input_channels, int batch_size) {
+void Classifier::wrapInputLayer(vector<cv::Mat>* input_channels, int batch_size) {
     Blob<float> *input_layer = net_->input_blobs()[0];
 
     int width = input_layer->width();
@@ -140,7 +139,7 @@ void Classifier::WrapInputLayer(vector<cv::Mat>* input_channels, int batch_size)
 }
 
 /* Convert the input image to the input image format of the network. */
-void Classifier::Preprocess(const vector<cv::Mat> &imgs, vector<cv::Mat> *input_channels) {
+void Classifier::preprocess(const vector<cv::Mat> &imgs, vector<cv::Mat> *input_channels) {
     for (unsigned int i = 0; i < imgs.size(); ++i) {
         cv::Mat sample;
 
@@ -187,7 +186,7 @@ void Classifier::Preprocess(const vector<cv::Mat> &imgs, vector<cv::Mat> *input_
 }
 
 /* Return the indices of the top N values of vector v. */
-vector<int> Classifier::Argmax(const vector<float> &v, int N) {
+vector<int> Classifier::argmax(const vector<float> &v, int N) {
     vector<pair<float, int>> pairs;
     for (size_t i = 0; i < v.size(); ++i)
         pairs.push_back(make_pair(v[i], i));

@@ -5,10 +5,16 @@
 
 #include <QImage>
 
+#include "util.h"
+#include "classifier.h"
+#include "caffenetbuilder.h"
+
 using namespace std;
 
 Processor::Processor(FrameProbeVSurface *probe, QObject *parent)
     : QObject(parent)
+    , builder_cl_(new CaffeNetBuilder())
+    , builder_dt_(nullptr)
     , cl_(nullptr)
     , dt_(nullptr)
     , probe_(probe)
@@ -17,26 +23,27 @@ Processor::Processor(FrameProbeVSurface *probe, QObject *parent)
 }
 
 Processor::~Processor() {
-    if (!cl_)
+    if (!cl_) {
         delete cl_;
-    if (!dt_)
+    }
+    if (!dt_) {
         delete dt_;
+    }
 }
 
-void Processor::initClassifier(const vector<QString> &filePaths) {
-    //Parse filePaths for existence of labels file and mean image file
-    //TODO: process labels file
-    cl_ = new Classifier(
-            filePaths[0].toStdString(),
-            filePaths[1].toStdString(),
-            filePaths[2].toStdString());
+void Processor::initClassifier() {
+    //TODO: what to do with labels file?
+    cl_ = builder_cl_->buildClassifier();
+    if (cl_) {
+        //TODO: do logic for handling when there is no classifier (or it is).
+    }
 }
 
-void Processor::initDetector(const vector<QString> &filePaths) {
-    dt_ = new Classifier(
-            filePaths[0].toStdString(),
-            filePaths[1].toStdString(),
-            filePaths[2].toStdString());
+void Processor::initDetector() {
+    dt_ = builder_dt_->buildDetector();
+    if (dt_) {
+        //TODO: do logic for handling when there is no detector (or it is).
+    }
 }
 
 void Processor::loadLabels(const string &labels_file) {
@@ -57,19 +64,19 @@ void Processor::loadLabels(const string &labels_file) {
 void Processor::receiveFrame(QImage frame) {
 
     probe_->pauseProbing();
-//    emit processingStarted();
 
-// There is a processing code.
+// TODO: Do somthing with time benchmarking -- it is useful.
     auto now = std::chrono::high_resolution_clock::now();
     auto now_ms = std::chrono::time_point_cast<std::chrono::microseconds>(now);
     auto val = now_ms.time_since_epoch();
     long dur = val.count();
 
+    //TODO: do processing code when there will be output logic.
+
     cout << "frame     received  at " << dur << endl;
     sleep(1);
 
     probe_->continueProbing();
-//    emit processingFinished();
 
 }
 

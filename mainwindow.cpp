@@ -37,13 +37,13 @@ MainWindow::MainWindow(QWidget *parent)
     ui->pushButtonPlay->setIcon(style()->standardIcon(QStyle::SP_MediaPlay));
     ui->horizontalSliderSeek->setRange(0, 0);
 
-    connect(ui->pushButtonOpenClassifier, &QPushButton::clicked, this, &MainWindow::openClassifier);
-    connect(ui->pushButtonOpenDetector, &QPushButton::clicked, this, &MainWindow::openDetector);
+    connect(ui->pushButtonOpenClassifier, &QPushButton::clicked, proc, &Processor::initClassifier);
+    connect(ui->pushButtonOpenDetector, &QPushButton::clicked, proc, &Processor::initDetector);
+    connect(ui->pushButtonStartCl, &QPushButton::clicked, probe, &FrameProbeVSurface::changeStateProbing);
     connect(ui->pushButtonOpenVideo, &QPushButton::clicked, this, &MainWindow::openVideo);
     connect(ui->pushButtonPlay, &QPushButton::clicked, this, &MainWindow::play);
     connect(ui->pushButtonOpenImage, &QPushButton::clicked, this, &MainWindow::openImage);
     connect(ui->horizontalSliderSeek, &QSlider::sliderMoved, this, &MainWindow::setVideoPos);
-    connect(ui->pushButtonStartCl, &QPushButton::clicked, probe, &FrameProbeVSurface::changeStateProbing);
 
     connect(ui->pushButtonCamera, &QPushButton::clicked, this, &MainWindow::setCamera);
     ui->pushButtonCamera->setEnabled( QCameraInfo::availableCameras().count() > 0 );
@@ -54,8 +54,10 @@ MainWindow::MainWindow(QWidget *parent)
 
     ui->graphicsView->viewport()->installEventFilter(this);
 
+    //TODO: remove then this temp and debug code
     cout << "main thread " << QThread::currentThreadId() << endl;
     ui->pushButtonOpenVideo->setEnabled(false); // ...as this doesn't work
+    ui->pushButtonOpenDetector->setEnabled(false); // ...as this is not implemented yet
 
     proc->moveToThread(&procThread);
     connect(probe, &FrameProbeVSurface::frameProbed, proc, &Processor::receiveFrame, Qt::QueuedConnection);
@@ -82,24 +84,6 @@ void MainWindow::resizeEvent(QResizeEvent *event) {
     Q_UNUSED(event)
 
     ui->graphicsView->fitInView(vitem, Qt::KeepAspectRatio);
-}
-
-//TODO: make user know that it is not okey when net is not loaded
-void MainWindow::openClassifier() {
-    net_dialog->exec();
-
-    if (net_dialog->result() == QDialog::Accepted && net_dialog->isFilesChoosed()) {
-        proc->initClassifier(net_dialog->filePaths());
-    }
-}
-
-//TODO: make user know that it is not okey when net is not loaded
-void MainWindow::openDetector() {
-    net_dialog->exec();
-
-    if (net_dialog->result() == QDialog::Accepted && net_dialog->isFilesChoosed()) {
-        proc->initDetector(net_dialog->filePaths());
-    }
 }
 
 void MainWindow::openVideo() {

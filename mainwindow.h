@@ -1,15 +1,12 @@
 #pragma once
 
-#include <memory>
-
-#include <QThread>
 #include <QMainWindow>
-
-#include <QMediaPlayer>
-#include <QGraphicsView>
-#include <QGraphicsVideoItem>
+#include <QThread>
 
 #include <QCamera>
+#include <QMediaPlayer>
+#include <QGraphicsScene>
+#include <QGraphicsPixmapItem>
 
 #include "opennetdialog.h"
 #include "frameprobevsurface.h"
@@ -33,9 +30,6 @@ public slots:
     void openImage();
     void setCamera();
     void setVideoPos(int pos);
-
-    void openClassifier();
-    void openDetector();
 
     void mediaStateChanged(QMediaPlayer::State state);
     void positionChanged(qint64 pos);

@@ -3,9 +3,11 @@
 #include <vector>
 
 #include <QObject>
-#include <QString>
 
-#include "classifier.h"
+#include "abstractclassifierbuilder.h"
+#include "abstractdetectorbuilder.h"
+#include "abstractclassifier.h"
+#include "abstractdetector.h"
 #include "frameprobevsurface.h"
 
 class Processor : public QObject
@@ -15,23 +17,20 @@ public:
     Processor(FrameProbeVSurface *probe, QObject *parent = 0);
     ~Processor();
 
-signals:
-//    void processingStarted();
-//    void processingFinished();
-
 public slots:
     void receiveFrame(QImage frame);
 
-    void initClassifier(const std::vector<QString> &filePaths);
-    void initDetector(const std::vector<QString> &filePaths);
+    void initClassifier();
+    void initDetector();
 
 private:
-    Classifier *cl_;
-    Classifier *dt_;
+    AbstractClassifierBuilder *builder_cl_;
+    AbstractDetectorBuilder *builder_dt_;
+    AbstractClassifier *cl_;
+    AbstractDetector *dt_;
     FrameProbeVSurface *probe_;
 
-
-    int i = 0;
+    /*dbg*/int i = 0;
 
     /* TODO: this method is just for scratch */
     void loadLabels(const std::string &labels_file);
