@@ -55,3 +55,11 @@ QImage Util::convertToImage(const QVideoFrame &frame)
     }
     return QImage();
 }
+
+QRectF Util::convertToRectF(const cv::Rect &rect) {
+    return QRectF(rect.x, rect.y, rect.width, rect.height);
+}
+
+QSize Util::convertToSize(cv::Size size) {
+    return QSize(size.width, size.height);
+}

@@ -10,6 +10,7 @@
 #include <QCameraInfo>
 
 #include "opennetdialog.h"
+#include "drawingoutput.h"
 
 using namespace std;
 
@@ -18,8 +19,9 @@ MainWindow::MainWindow(QWidget *parent)
     , procThread()
     , probThread()
     , player(new QMediaPlayer())
-    , vitem(new QGraphicsPixmapItem())
     , camera(nullptr)
+    , vitem(new QGraphicsPixmapItem())
+    , output(nullptr)
     , ui(new Ui::MainWindow)
     , net_dialog(new OpenNetDialog(this))
     , proc(nullptr)
@@ -30,6 +32,7 @@ MainWindow::MainWindow(QWidget *parent)
     ui->graphicsView->setScene(scene);
 //    vitem->setPos(0, 0);
     scene->addItem(vitem);
+    output = new DrawingOutput(ui->graphicsView, vitem);
     probe = new FrameProbeVSurface(vitem);
     proc = new Processor(probe);
 

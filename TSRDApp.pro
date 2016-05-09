@@ -24,7 +24,9 @@ SOURCES += main.cpp\
     opennetdialog.cpp \
     util.cpp \
     frameprobevsurface.cpp \
-    caffenetbuilder.cpp
+    caffenetbuilder.cpp \
+    abstractoutput.cpp \
+    drawingoutput.cpp
 
 HEADERS  += mainwindow.h \
     classifier.h \
@@ -36,7 +38,9 @@ HEADERS  += mainwindow.h \
     abstractdetector.h \
     abstractclassifierbuilder.h \
     abstractdetectorbuilder.h \
-    caffenetbuilder.h
+    caffenetbuilder.h \
+    abstractoutput.h \
+    drawingoutput.h
 
 FORMS    += mainwindow.ui \
     opennetdialog.ui

@@ -47,9 +47,11 @@ private:
 
     QGraphicsScene *scene;
     QMediaPlayer *player;
-    FrameProbeVSurface *probe;
-    QGraphicsPixmapItem *vitem;
     QCamera *camera;
+
+    QGraphicsPixmapItem *vitem;
+    FrameProbeVSurface *probe;
+
 
     Ui::MainWindow *ui;
     OpenNetDialog *net_dialog;
