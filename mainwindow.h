@@ -11,6 +11,7 @@
 #include "opennetdialog.h"
 #include "frameprobevsurface.h"
 #include "processor.h"
+#include "abstractoutput.h"
 
 namespace Ui {
 class MainWindow;
@@ -25,12 +26,12 @@ public:
     ~MainWindow();
 
 public slots:
-    void play();
     void openVideo();
     void openImage();
     void setCamera();
-    void setVideoPos(int pos);
 
+    void play();
+    void setVideoPos(int pos);
     void mediaStateChanged(QMediaPlayer::State state);
     void positionChanged(qint64 pos);
     void durationChanged(qint64 dur);
@@ -51,7 +52,7 @@ private:
 
     QGraphicsPixmapItem *vitem;
     FrameProbeVSurface *probe;
-
+    AbstractOutput *output;
 
     Ui::MainWindow *ui;
     OpenNetDialog *net_dialog;

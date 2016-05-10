@@ -21,3 +21,5 @@ void AbstractOutput::loadLabels(const std::vector<std::string> &labels) {
     labels_ = labels;
     is_labels_ = true;
 }
+
+AbstractOutput::~AbstractOutput() {}

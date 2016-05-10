@@ -26,7 +26,9 @@ SOURCES += main.cpp\
     frameprobevsurface.cpp \
     caffenetbuilder.cpp \
     abstractoutput.cpp \
-    drawingoutput.cpp
+    drawingoutput.cpp \
+    abstractdetector.cpp \
+    abstractclassifier.cpp
 
 HEADERS  += mainwindow.h \
     classifier.h \
@@ -45,20 +47,21 @@ HEADERS  += mainwindow.h \
 FORMS    += mainwindow.ui \
     opennetdialog.ui
 
-win32:CONFIG(release, debug|release): LIBS += -L$$PWD/../../../builds/py-faster-rcnn/caffe-fast-rcnn/build/lib/release/ -lcaffe
-else:win32:CONFIG(debug, debug|release): LIBS += -L$$PWD/../../../builds/py-faster-rcnn/caffe-fast-rcnn/build/lib/debug/ -lcaffe
-else:unix: LIBS += -L$$PWD/../../../builds/py-faster-rcnn/caffe-fast-rcnn/build/lib/ -lcaffe
+# py-faster-rcnn Caffe fork
+#win32:CONFIG(release, debug|release): LIBS += -L$$PWD/../../../builds/py-faster-rcnn/caffe-fast-rcnn/build/lib/release/ -lcaffe
+#else:win32:CONFIG(debug, debug|release): LIBS += -L$$PWD/../../../builds/py-faster-rcnn/caffe-fast-rcnn/build/lib/debug/ -lcaffe
+#else:unix: LIBS += -L$$PWD/../../../builds/py-faster-rcnn/caffe-fast-rcnn/build/lib/ -lcaffe
 
-INCLUDEPATH += $$PWD/../../../builds/py-faster-rcnn/caffe-fast-rcnn/include
-DEPENDPATH += $$PWD/../../../builds/py-faster-rcnn/caffe-fast-rcnn/include
+#INCLUDEPATH += $$PWD/../../../builds/py-faster-rcnn/caffe-fast-rcnn/include
+#DEPENDPATH += $$PWD/../../../builds/py-faster-rcnn/caffe-fast-rcnn/include
 
 # Caffe from aur
-#win32:CONFIG(release, debug|release): LIBS += -L/usr/lib/release/ -lcaffe
-#else:win32:CONFIG(debug, debug|release): LIBS += -L/usr/lib/debug/ -lcaffe
-#else:unix: LIBS += -L/usr/lib/ -lcaffe
+win32:CONFIG(release, debug|release): LIBS += -L/usr/lib/release/ -lcaffe
+else:win32:CONFIG(debug, debug|release): LIBS += -L/usr/lib/debug/ -lcaffe
+else:unix: LIBS += -L/usr/lib/ -lcaffe
 
-#INCLUDEPATH += /opt/caffe/include
-#DEPENDPATH += /opt/caffe/include
+INCLUDEPATH += /opt/caffe/include
+DEPENDPATH += /opt/caffe/include
 
 win32:CONFIG(release, debug|release): LIBS += -L/usr/lib/release/ -lcuda
 else:win32:CONFIG(debug, debug|release): LIBS += -L/usr/lib/debug/ -lcuda

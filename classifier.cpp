@@ -106,8 +106,8 @@ vector<vector<float> > Classifier::predict(const vector<cv::Mat> &imgs) {
     wrapInputLayer(&input_channels, batch_size);
     preprocess(imgs, &input_channels);
 
-//    net_->Forward();
-    net_->Forward(net_->input_blobs());
+    net_->Forward();
+//    net_->Forward(net_->input_blobs());
 
     /* Copy the output layer to a vector of vectors */
     Blob<float>* output_layer = net_->output_blobs()[0];

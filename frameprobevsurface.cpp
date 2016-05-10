@@ -68,6 +68,7 @@ bool FrameProbeVSurface::present(const QVideoFrame &frame)
             ++i;
             if (isProbing_ && !isPaused_) {
 
+                //TODO: remove then
                 auto now = std::chrono::high_resolution_clock::now();
                 auto now_ms = std::chrono::time_point_cast<std::chrono::microseconds>(now);
                 auto val = now_ms.time_since_epoch();

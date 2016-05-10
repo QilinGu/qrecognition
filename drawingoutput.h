@@ -20,6 +20,7 @@ public:
     DrawingOutput(QGraphicsView *view, QGraphicsPixmapItem *display,
                   QPen pen, QBrush brush);
 
+    void output(const std::vector<std::pair<int, float> > &predictions) override;
     void output(const std::vector<cv::Rect> &boxes) override;
     void output(const std::vector<cv::Rect> &boxes,
                 const std::vector<std::vector<std::pair<int, float> > > &predictions) override;

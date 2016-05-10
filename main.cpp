@@ -7,10 +7,79 @@
 #include <opencv/cv.h>
 #include <opencv2/xobjdetect.hpp>
 
+#include "util.h"
 #include "classifier.h"
+#include <QImage>
 
 using namespace std;
 using namespace caffe;
+
+// take number image type number (from cv::Mat.type()), get OpenCV's enum string.
+string getImgType(int imgTypeInt)
+{
+    int numImgTypes = 35; // 7 base types, with five channel options each (none or C1, ..., C4)
+
+    int enum_ints[] =       {CV_8U,  CV_8UC1,  CV_8UC2,  CV_8UC3,  CV_8UC4,
+                             CV_8S,  CV_8SC1,  CV_8SC2,  CV_8SC3,  CV_8SC4,
+                             CV_16U, CV_16UC1, CV_16UC2, CV_16UC3, CV_16UC4,
+                             CV_16S, CV_16SC1, CV_16SC2, CV_16SC3, CV_16SC4,
+                             CV_32S, CV_32SC1, CV_32SC2, CV_32SC3, CV_32SC4,
+                             CV_32F, CV_32FC1, CV_32FC2, CV_32FC3, CV_32FC4,
+                             CV_64F, CV_64FC1, CV_64FC2, CV_64FC3, CV_64FC4};
+
+    string enum_strings[] = {"CV_8U",  "CV_8UC1",  "CV_8UC2",  "CV_8UC3",  "CV_8UC4",
+                             "CV_8S",  "CV_8SC1",  "CV_8SC2",  "CV_8SC3",  "CV_8SC4",
+                             "CV_16U", "CV_16UC1", "CV_16UC2", "CV_16UC3", "CV_16UC4",
+                             "CV_16S", "CV_16SC1", "CV_16SC2", "CV_16SC3", "CV_16SC4",
+                             "CV_32S", "CV_32SC1", "CV_32SC2", "CV_32SC3", "CV_32SC4",
+                             "CV_32F", "CV_32FC1", "CV_32FC2", "CV_32FC3", "CV_32FC4",
+                             "CV_64F", "CV_64FC1", "CV_64FC2", "CV_64FC3", "CV_64FC4"};
+
+    for(int i=0; i<numImgTypes; i++)
+    {
+        if(imgTypeInt == enum_ints[i]) return enum_strings[i];
+    }
+    return "unknown image type";
+}
+
+void testUtil() {
+
+    string img_file = "/home/gkirg/projects/compvis/analyze/own_data/00001.ppm";
+    cv::Mat img = cv::imread(img_file, -1);
+    QImage qimg(img_file.c_str());
+
+//    cv::namedWindow("Display original");
+//    cv::imshow("Display original", img);
+
+
+    auto q_test_type = qimg.format(); // RGB32
+    auto test_type = img.type(); // CV_8UC3
+    auto test_type_s = getImgType(test_type);
+
+    auto ass = img != img;
+    auto boolass = cv::countNonZero(ass) == 0;
+//    auto ass2 = img == img;
+//    auto boolass2 = cv::countNonZero(ass2) == 0;
+    auto qass = qimg == qimg;
+
+    QImage img_q = Util::convertToImage(img);
+    auto boolres1 = qimg == img_q;
+
+    cv::Mat img_ = Util::convertToMat(img_q);
+    auto res2 = img != img_;
+    auto boolres2 = cv::countNonZero(res2);
+//    cv::namedWindow("Display transfered");
+//    cv::imshow("Display transfered", img_);
+
+
+    cv::Mat qimg_ = Util::convertToMat(qimg);
+    auto res3 = qimg_ != img;
+    auto boolres3 = cv::countNonZero(res3);
+
+    QImage qimg_q = Util::convertToImage(qimg_);
+    auto boolres4 = qimg_q == qimg;
+
+}
 
 void testPredict() {
     string work_dir = "/home/gkirg/projects/compvis/caffe/gtsrb/finetuning/";
@@ -28,7 +97,11 @@ void testPredict() {
     vector<cv::Mat> imgs;
     for (int i = 0; i < batch_size; ++i) {
         string img_file = "/home/gkirg/projects/compvis/analyze/own_data/0000" + to_string(i+1) + ".ppm";
-        cv::Mat img = cv::imread(img_file, -1);
+
+        QImage img_(img_file.c_str());
+        cv::Mat img = Util::convertToMat(img_);
+//        cv::Mat img = cv::imread(img_file, -1);
+
         CHECK(!img.empty()) << "Unable to decode image " << img_file;
         imgs.push_back(img);
     }
@@ -47,7 +120,17 @@ void testPredict() {
 }
 
 void testDetect() {
+//    img 0: 0.9933 - 38
+//    img 0: 0.0031 - 34
+//    img 0: 0.0029 - 39
 
+//    img 1: 0.7361 - 38
+//    img 1: 0.1314 - 34
+//    img 1: 0.1292 - 39
+
+//    img 2: 0.8269 - 2
+//    img 2: 0.0862 - 0
+//    img 2: 0.0308 - 39
 }
 
 void trainDetector() {
@@ -87,8 +170,10 @@ int main(int argc, char *argv[])
     MainWindow w;
     w.show();
 
+//    testPredict();
+//    testUtil();
 //    trainDetector();
 
     return a.exec();
-    return 0;
+//    return 0;
 }

@@ -1,6 +1,7 @@
 #include "drawingoutput.h"
 
-#include <QtGlobal>
+#include <iostream>
+
 #include <QColor>
 
 #include "util.h"
@@ -27,6 +28,19 @@ DrawingOutput::DrawingOutput(QGraphicsView *view, QGraphicsPixmapItem *display, 
     , pen_(pen)
     , brush_(brush)
 {
+}
+
+//TODO: output only predictions
+void DrawingOutput::output(const std::vector<std::pair<int, float> > &predictions) {
+    if (!is_labels_) {
+        for (auto pred : predictions) {
+            cout << pred.first << " : probability " << pred.second << endl;
+        }
+    } else {
+        for (auto pred : predictions) {
+            cout << labels_[pred.first] << " : probability " << pred.second << endl;
+        }
+    }
 }
 
 void DrawingOutput::output(const std::vector<cv::Rect> &boxes) {

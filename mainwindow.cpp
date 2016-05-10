@@ -34,7 +34,7 @@ MainWindow::MainWindow(QWidget *parent)
     scene->addItem(vitem);
     output = new DrawingOutput(ui->graphicsView, vitem);
     probe = new FrameProbeVSurface(vitem);
-    proc = new Processor(probe);
+    proc = new Processor(output, probe);
 
     ui->pushButtonPlay->setEnabled(false);
     ui->pushButtonPlay->setIcon(style()->standardIcon(QStyle::SP_MediaPlay));
