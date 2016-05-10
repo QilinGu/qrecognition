@@ -3,74 +3,105 @@
 
 #include <iostream>
 
+#include <QMetaObject>
+#include <QDebug>
 #include <QUrl>
-#include <QFileDialog>
 #include <QDir>
+#include <QFileDialog>
 #include <QResizeEvent>
 #include <QCameraInfo>
 
 #include "opennetdialog.h"
+#include "graphicspixmapitemviewer.h"
+#include "labelviewer.h"
 #include "drawingoutput.h"
+
+Q_DECLARE_METATYPE(cv::Mat)
 
 using namespace std;
 
 MainWindow::MainWindow(QWidget *parent)
     : QMainWindow(parent)
-    , procThread()
-    , probThread()
-    , player(new QMediaPlayer())
-    , camera(nullptr)
+    , thread1()
+    , thread2()
+    , thread3()
+    , thread4()
     , vitem(new QGraphicsPixmapItem())
-    , output(nullptr)
-    , ui(new Ui::MainWindow)
-    , net_dialog(new OpenNetDialog(this))
+    , capture(new Capture())
+    , converter(new Converter())
     , proc(nullptr)
+    , viewer(nullptr)
+    , output(nullptr)
+    , net_dialog(new OpenNetDialog(this))
+    , ui(new Ui::MainWindow)
 {
+    qRegisterMetaType<cv::Mat>();
+
     ui->setupUi(this);
 
     scene = new QGraphicsScene(this);
     ui->graphicsView->setScene(scene);
 //    vitem->setPos(0, 0);
     scene->addItem(vitem);
+//    viewer = new GraphicsPixmapItemViewer(ui->graphicsView, vitem);
+    viewer = new LabelViewer(ui->label);
     output = new DrawingOutput(ui->graphicsView, vitem);
-    probe = new FrameProbeVSurface(vitem);
-    proc = new Processor(output, probe);
+    proc = new Processor(output);
+    converter->setProcessAll(false);
 
     ui->pushButtonPlay->setEnabled(false);
-    ui->pushButtonPlay->setIcon(style()->standardIcon(QStyle::SP_MediaPlay));
+//    ui->pushButtonPlay->setIcon(style()->standardIcon(QStyle::SP_MediaPlay));
     ui->horizontalSliderSeek->setRange(0, 0);
 
     connect(ui->pushButtonOpenClassifier, &QPushButton::clicked, proc, &Processor::initClassifier);
     connect(ui->pushButtonOpenDetector, &QPushButton::clicked, proc, &Processor::initDetector);
-    connect(ui->pushButtonStartCl, &QPushButton::clicked, probe, &FrameProbeVSurface::changeStateProbing);
-    connect(ui->pushButtonOpenVideo, &QPushButton::clicked, this, &MainWindow::openVideo);
+    connect(ui->pushButtonStartCl, &QPushButton::clicked, proc, &Processor::changeStateProcessing);
     connect(ui->pushButtonPlay, &QPushButton::clicked, this, &MainWindow::play);
-    connect(ui->pushButtonOpenImage, &QPushButton::clicked, this, &MainWindow::openImage);
     connect(ui->horizontalSliderSeek, &QSlider::sliderMoved, this, &MainWindow::setVideoPos);
 
+    connect(ui->pushButtonOpenVideo, &QPushButton::clicked, this, &MainWindow::setVideo);
+    connect(ui->pushButtonOpenImage, &QPushButton::clicked, this, &MainWindow::setImage);
     connect(ui->pushButtonCamera, &QPushButton::clicked, this, &MainWindow::setCamera);
     ui->pushButtonCamera->setEnabled( QCameraInfo::availableCameras().count() > 0 );
 
-    connect(player, &QMediaPlayer::stateChanged, this, &MainWindow::mediaStateChanged);
-    connect(player, &QMediaPlayer::positionChanged, this, &MainWindow::positionChanged);
-    connect(player, &QMediaPlayer::durationChanged, this, &MainWindow::durationChanged);
+//    TODO: what to do with player signals?
+//    connect(player, &QMediaPlayer::stateChanged, this, &MainWindow::mediaStateChanged);
+//    connect(player, &QMediaPlayer::positionChanged, this, &MainWindow::positionChanged);
+//    connect(player, &QMediaPlayer::durationChanged, this, &MainWindow::durationChanged);
 
     ui->graphicsView->viewport()->installEventFilter(this);
 
-    //TODO: remove then this temp and debug code
+//    TODO: remove then this temp and debug code
     cout << "main thread " << QThread::currentThreadId() << endl;
-    ui->pushButtonOpenVideo->setEnabled(false); // ...as this doesn't work
+//    ui->pushButtonOpenVideo->setEnabled(false); // ...as this doesn't work
     ui->pushButtonOpenDetector->setEnabled(false); // ...as this is not implemented yet
 
-    proc->moveToThread(&procThread);
-    connect(probe, &FrameProbeVSurface::frameProbed, proc, &Processor::receiveFrame, Qt::QueuedConnection);
-    procThread.start();
+    //TODO: think about ThreadPool
+    capture->moveToThread(&thread1);
+    proc->moveToThread(&thread2);
+//    output->moveToThread(&thread2);
+    converter->moveToThread(&thread3);
+    viewer->moveToThread(&thread4);
+    thread1.start();
+    thread2.start();
+    thread3.start();
+    thread4.start();
+
+    connect(capture, &Capture::matReady, proc, &Processor::receiveFrame, Qt::QueuedConnection);
+    connect(capture, &Capture::matReady, converter, &Converter::processFrame, Qt::QueuedConnection);
+    connect(converter, &Converter::imageReady, viewer, &AbstractViewer::displayImage, Qt::QueuedConnection);
 }
 
 MainWindow::~MainWindow()
 {
-    procThread.quit();
-    procThread.wait();
+    thread1.quit();
+    thread2.quit();
+    thread3.quit();
+    thread4.quit();
+    thread1.wait();
+    thread2.wait();
+    thread3.wait();
+    thread4.wait();
     delete ui;
 }
 
@@ -84,21 +115,18 @@ bool MainWindow::eventFilter(QObject *obj, QEvent *ev) {
 }
 
 void MainWindow::resizeEvent(QResizeEvent *event) {
-    Q_UNUSED(event)
-
-    ui->graphicsView->fitInView(vitem, Qt::KeepAspectRatio);
+    viewer->resizeEvent(event);
 }
 
-void MainWindow::openVideo() {
-    QString fileName = QFileDialog::getOpenFileName(this,
+void MainWindow::setVideo() {
+//    TODO: what video types opencv supports?
+    QString filename = QFileDialog::getOpenFileName(this,
         tr("Open Video"), QDir::homePath(), tr("Video Files (*)"));
 
-    if (!fileName.isEmpty()) {
+    if (!filename.isEmpty()) {
         clear();
 
-        player->setVideoOutput(probe);
-        player->setMedia(QUrl::fromLocalFile(fileName));
-        player->play();
+        QMetaObject::invokeMethod(capture, "startVideo", Q_ARG(QString, filename));
         ui->pushButtonPlay->setEnabled(true);
 
 //        vitem->setSize(QSizeF(ui->graphicsView->rect().size()));
@@ -110,77 +138,59 @@ void MainWindow::setCamera() {
     // It is supposed that this method invoked only when there exist cameras.
     clear();
     auto cameras = QCameraInfo::availableCameras();
-
     if (cameras.count() == 1) {
-        camera = new QCamera(cameras.at(0));
+        QMetaObject::invokeMethod(capture, "startCamera");
     } else {
-        //TODO: dialog to choose camera
-        camera = new QCamera();
+//      TODO: dialog to choose camera
+        QMetaObject::invokeMethod(capture, "startCamera");
     }
-
-    camera->setViewfinder(probe);
-    camera->start();
 
 //    vitem->setSize(QSizeF(ui->graphicsView->rect().size()));
     ui->graphicsView->fitInView(vitem, Qt::KeepAspectRatio);
 }
 
-void MainWindow::openImage() {
+void MainWindow::setImage() {
+//    TODO: what image types opencv supports?
     QString filename = QFileDialog::getOpenFileName(this,
         tr("Open Image"), QDir::homePath(), tr("Image Files (*)"));
 
     if (!filename.isEmpty()) {
         clear();
-        probe->presentImage(QImage(filename));
+
+        proc->setProcessing(true);
+        QMetaObject::invokeMethod(capture, "startImage", Q_ARG(QString, filename));
 
         ui->graphicsView->fitInView(vitem, Qt::KeepAspectRatio);
     }
 }
 
 void MainWindow::clear() {
-    if (camera) {
-        camera->stop();
-        delete camera;
-        camera = nullptr;
-    }
-
-    player->setMedia(QMediaContent());
+    QMetaObject::invokeMethod(capture, "stop");
     ui->pushButtonPlay->setEnabled(false);
 }
 
 void MainWindow::play() {
-    switch(player->state()) {
-    case QMediaPlayer::PlayingState:
-        player->pause();
-        break;
-    default:
-        player->play();
-        break;
-    }
 }
 
 void MainWindow::setVideoPos(int pos) {
-    player->setPosition(pos);
 }
 
-void MainWindow::mediaStateChanged(QMediaPlayer::State state)
-{
-    switch(state) {
-    case QMediaPlayer::PlayingState:
-        ui->pushButtonPlay->setIcon(style()->standardIcon(QStyle::SP_MediaPause));
-        break;
-    default:
-        ui->pushButtonPlay->setIcon(style()->standardIcon(QStyle::SP_MediaPlay));
-        break;
-    }
-}
+//void MainWindow::mediaStateChanged(QMediaPlayer::State state)
+//{
+//    switch(state) {
+//    case QMediaPlayer::PlayingState:
+//        ui->pushButtonPlay->setIcon(style()->standardIcon(QStyle::SP_MediaPause));
+//        break;
+//    default:
+//        ui->pushButtonPlay->setIcon(style()->standardIcon(QStyle::SP_MediaPlay));
+//        break;
+//    }
+//}
 
-void MainWindow::positionChanged(qint64 position)
-{
+void MainWindow::positionChanged(qint64 position) {
     ui->horizontalSliderSeek->setValue(position);
 }
 
-void MainWindow::durationChanged(qint64 duration)
-{
+void MainWindow::durationChanged(qint64 duration) {
     ui->horizontalSliderSeek->setRange(0, duration);
 }

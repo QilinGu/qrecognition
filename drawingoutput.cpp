@@ -4,8 +4,6 @@
 
 #include <QColor>
 
-#include "util.h"
-
 using namespace std;
 
 DrawingOutput::DrawingOutput(QGraphicsView *view, QGraphicsPixmapItem *display)
@@ -46,7 +44,7 @@ void DrawingOutput::output(const std::vector<std::pair<int, float> > &prediction
 void DrawingOutput::output(const std::vector<cv::Rect> &boxes) {
     boxes_.clear();
     for (cv::Rect box : boxes) {
-        boxes_.push_back( view_->scene()->addRect( Util::convertToRectF(box), pen_, brush_ ) );
+        boxes_.push_back( view_->scene()->addRect( convertToRectF(box), pen_, brush_ ) );
     }
 }
 
@@ -57,7 +55,7 @@ void DrawingOutput::output(const std::vector<cv::Rect> &boxes,
 
     boxes_.clear();
     for (cv::Rect box : boxes) {
-        boxes_.push_back( view_->scene()->addRect( Util::convertToRectF(box), pen_, brush_ ) );
+        boxes_.push_back( view_->scene()->addRect( convertToRectF(box), pen_, brush_ ) );
 
         //TODO: draw predictions
     }
@@ -87,4 +85,8 @@ void DrawingOutput::update(cv::Size orig_img_size, cv::Size new_img_size) {
 //            box->setPos(box->scenePos());
         }
     }
+}
+
+QRectF DrawingOutput::convertToRectF(const cv::Rect &rect) {
+    return QRectF(rect.x, rect.y, rect.width, rect.height);
 }

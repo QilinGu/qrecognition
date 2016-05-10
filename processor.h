@@ -4,22 +4,25 @@
 
 #include <QObject>
 
+#include <opencv2/opencv.hpp>
+
 #include "abstractclassifierbuilder.h"
 #include "abstractdetectorbuilder.h"
 #include "abstractclassifier.h"
 #include "abstractdetector.h"
 #include "abstractoutput.h"
-#include "frameprobevsurface.h"
 
 class Processor : public QObject
 {
     Q_OBJECT
 public:
-    Processor(AbstractOutput *output, FrameProbeVSurface *probe, QObject *parent = 0);
+    Processor(AbstractOutput *output, QObject *parent = 0);
     ~Processor();
 
 public slots:
-    void receiveFrame(QImage frame);
+    void receiveFrame(const cv::Mat &frame);
+    void changeStateProcessing();
+    void setProcessing(bool is_processing);
 
     void initClassifier();
     void initDetector();
@@ -30,11 +33,13 @@ private:
     AbstractClassifier *cl_;
     AbstractDetector *dt_;
     AbstractOutput *out_;
-    FrameProbeVSurface *probe_;
+
+    bool is_ready_;
+    bool is_processing_;
 
     /*dbg*/int i = 0;
 
-    void process(QImage frame);
+    void process(const cv::Mat &img);
     std::vector<cv::Mat> cropImages(const std::vector<cv::Rect> &boxes);
 
     /* TODO: this method is just for scratch */

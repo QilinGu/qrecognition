@@ -7,7 +7,6 @@
 #include <opencv/cv.h>
 #include <opencv2/xobjdetect.hpp>
 
-#include "util.h"
 #include "classifier.h"
 #include <QImage>
 
@@ -42,45 +41,6 @@ string getImgType(int imgTypeInt)
     return "unknown image type";
 }
 
-void testUtil() {
-
-    string img_file = "/home/gkirg/projects/compvis/analyze/own_data/00001.ppm";
-    cv::Mat img = cv::imread(img_file, -1);
-    QImage qimg(img_file.c_str());
-
-//    cv::namedWindow("Display original");
-//    cv::imshow("Display original", img);
-
-
-    auto q_test_type = qimg.format(); // RGB32
-    auto test_type = img.type(); // CV_8UC3
-    auto test_type_s = getImgType(test_type);
-
-    auto ass = img != img;
-    auto boolass = cv::countNonZero(ass) == 0;
-//    auto ass2 = img == img;
-//    auto boolass2 = cv::countNonZero(ass2) == 0;
-    auto qass = qimg == qimg;
-
-    QImage img_q = Util::convertToImage(img);
-    auto boolres1 = qimg == img_q;
-
-    cv::Mat img_ = Util::convertToMat(img_q);
-    auto res2 = img != img_;
-    auto boolres2 = cv::countNonZero(res2);
-//    cv::namedWindow("Display transfered");
-//    cv::imshow("Display transfered", img_);
-
-
-    cv::Mat qimg_ = Util::convertToMat(qimg);
-    auto res3 = qimg_ != img;
-    auto boolres3 = cv::countNonZero(res3);
-
-    QImage qimg_q = Util::convertToImage(qimg_);
-    auto boolres4 = qimg_q == qimg;
-
-}
-
 void testPredict() {
     string work_dir = "/home/gkirg/projects/compvis/caffe/gtsrb/finetuning/";
 
@@ -98,9 +58,7 @@ void testPredict() {
     for (int i = 0; i < batch_size; ++i) {
         string img_file = "/home/gkirg/projects/compvis/analyze/own_data/0000" + to_string(i+1) + ".ppm";
 
-        QImage img_(img_file.c_str());
-        cv::Mat img = Util::convertToMat(img_);
-//        cv::Mat img = cv::imread(img_file, -1);
+        cv::Mat img = cv::imread(img_file, -1);
 
         CHECK(!img.empty()) << "Unable to decode image " << img_file;
         imgs.push_back(img);
@@ -171,7 +129,6 @@ int main(int argc, char *argv[])
     w.show();
 
 //    testPredict();
-//    testUtil();
 //    trainDetector();
 
     return a.exec();

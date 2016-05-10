@@ -10,6 +10,7 @@
 #include <QGraphicsPixmapItem>
 #include <QPen>
 #include <QBrush>
+#include <QRectF>
 
 #include "abstractoutput.h"
 
@@ -36,5 +37,7 @@ private:
 
     QPen pen_;
     QBrush brush_;
+
+    QRectF convertToRectF(const cv::Rect &rect);
 
 };

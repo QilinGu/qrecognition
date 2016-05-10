@@ -22,27 +22,32 @@ SOURCES += main.cpp\
     classifier.cpp \
     processor.cpp \
     opennetdialog.cpp \
-    util.cpp \
-    frameprobevsurface.cpp \
     caffenetbuilder.cpp \
     abstractoutput.cpp \
     drawingoutput.cpp \
     abstractdetector.cpp \
-    abstractclassifier.cpp
+    abstractclassifier.cpp \
+    capture.cpp \
+    converter.cpp \
+    graphicspixmapitemviewer.cpp \
+    labelviewer.cpp
 
 HEADERS  += mainwindow.h \
     classifier.h \
     processor.h \
     opennetdialog.h \
-    util.h \
-    frameprobevsurface.h \
     abstractclassifier.h \
     abstractdetector.h \
     abstractclassifierbuilder.h \
     abstractdetectorbuilder.h \
     caffenetbuilder.h \
     abstractoutput.h \
-    drawingoutput.h
+    drawingoutput.h \
+    capture.h \
+    converter.h \
+    abstractviewer.h \
+    graphicspixmapitemviewer.h \
+    labelviewer.h
 
 FORMS    += mainwindow.ui \
     opennetdialog.ui
@@ -89,6 +94,10 @@ else:unix: LIBS += -L/usr/lib/ -lopencv_imgproc
 win32:CONFIG(release, debug|release): LIBS += -L/usr/lib/release/ -lopencv_imgcodecs
 else:win32:CONFIG(debug, debug|release): LIBS += -L/usr/lib/debug/ -lopencv_imgcodecs
 else:unix: LIBS += -L/usr/lib/ -lopencv_imgcodecs
+
+win32:CONFIG(release, debug|release): LIBS += -L$$PWD/../../../../usr/lib/release/ -lopencv_videoio
+else:win32:CONFIG(debug, debug|release): LIBS += -L$$PWD/../../../../usr/lib/debug/ -lopencv_videoio
+else:unix: LIBS += -L$$PWD/../../../../usr/lib/ -lopencv_videoio
 
 INCLUDEPATH += /usr/include
 DEPENDPATH += /usr/include

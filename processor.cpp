@@ -3,26 +3,24 @@
 #include <iostream>
 #include <chrono>
 
-#include <QImage>
 #include <QDebug>
+#include <QImage>
 
-#include "util.h"
 #include "classifier.h"
 #include "caffenetbuilder.h"
 
 using namespace std;
 
-Processor::Processor(AbstractOutput *output, FrameProbeVSurface *probe, QObject *parent)
+Processor::Processor(AbstractOutput *output, QObject *parent)
     : QObject(parent)
     , builder_cl_(new CaffeNetBuilder())
     , builder_dt_(nullptr)
     , cl_(nullptr)
     , dt_(nullptr)
     , out_(output)
-    , probe_(probe)
-{
-
-}
+    , is_ready_(true)
+    , is_processing_(false)
+{}
 
 Processor::~Processor() {
     if (!cl_) {
@@ -30,6 +28,16 @@ Processor::~Processor() {
     }
     if (!dt_) {
         delete dt_;
+    }
+    if (!builder_dt_) {
+        delete builder_dt_;
+    }
+    if (!builder_cl_) {
+        delete builder_cl_;
+    }
+    // TODO: check this
+    if (!out_) {
+        delete out_;
     }
 }
 
@@ -63,34 +71,42 @@ void Processor::loadLabels(const string &labels_file) {
 //        << "Number of labels is different from the output layer dimension.";
 }
 
-void Processor::receiveFrame(QImage frame) {
-
-    probe_->pauseProbing();
-
-// TODO: Do somthing with time benchmarking -- it is useful.
-    auto now = std::chrono::high_resolution_clock::now();
-    auto now_ms = std::chrono::time_point_cast<std::chrono::microseconds>(now);
-//    auto val = now_ms.time_since_epoch();
-//    long dur = val.count();
-
-    //TODO: do processing code when there will be output logic.
-    cout << "frame     received  at " << endl;
-//    sleep(1);
-    process(frame);
-
-    probe_->continueProbing();
-
-    auto now_end = std::chrono::high_resolution_clock::now();
-    auto now_end_ms = std::chrono::time_point_cast<std::chrono::microseconds>(now_end);
-    auto val = now_end_ms.time_since_epoch() - now_ms.time_since_epoch();
-    long dur = val.count();
-
-    cout << "frame processed in " << dur << endl;
-
+void Processor::changeStateProcessing() {
+    //TODO: mutex
+    is_processing_ = !is_processing_;
 }
 
-void Processor::process(QImage frame) {
-    cv::Mat img = Util::convertToMat(frame);
+void Processor::setProcessing(bool is_processing) {
+    //TODO: mutex
+    is_processing_ = is_processing;
+}
+
+void Processor::receiveFrame(const cv::Mat &frame) {
+
+//    TODO: mutexes - for both bools
+    if (is_processing_) {
+        if (is_ready_) {
+            is_ready_ = false;
+
+    //      TODO: Do somthing with time benchmarking -- it is useful.
+            auto now = std::chrono::high_resolution_clock::now();
+            auto now_ms = std::chrono::time_point_cast<std::chrono::milliseconds>(now);
+
+    //        process(frame);
+
+            auto now_end = std::chrono::high_resolution_clock::now();
+            auto now_end_ms = std::chrono::time_point_cast<std::chrono::milliseconds>(now_end);
+            auto val = now_end_ms.time_since_epoch() - now_ms.time_since_epoch();
+            long dur = val.count();
+            cout << "frame " << ++i << " processed in " << dur << endl;
+
+    //      TODO: mutex
+            is_ready_ = true;
+        }
+    }
+}
+
+void Processor::process(const cv::Mat &img) {
 
     // if user specified detector, then detect objects from image
     vector<cv::Mat> detected;
@@ -102,7 +118,7 @@ void Processor::process(QImage frame) {
         detected.push_back(img);
     }
 
-    // if user specified classifier, then classify images
+    // if user specified classifier, then classify detected images
     vector<vector<Prediction> > classified;
     if (cl_) {
        classified = cl_->classify(detected, 5);
@@ -119,8 +135,7 @@ void Processor::process(QImage frame) {
             out_->output(classified[0]);
         } else {
             //TODO: case for output when there is no both cl and dt
-            qDebug() << "Either classifier or detecor were not specifid :"
-                     << "nothing to do.";
+            qDebug() << "Either classifier or detecor were not specified - nothing to do.";
         }
 
     }
@@ -130,13 +145,3 @@ void Processor::process(QImage frame) {
 vector<cv::Mat> Processor::cropImages(const std::vector<cv::Rect> &boxes) {
     return vector<cv::Mat>();
 }
-
-/* Pipeline :
- *
- * QVideoFrame
- * |> to cv::Mat
- * |> Detect
- * |> Classify(batch)
- * |> OutputResult
- *
- */

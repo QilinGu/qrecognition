@@ -3,15 +3,15 @@
 #include <QMainWindow>
 #include <QThread>
 
-#include <QCamera>
-#include <QMediaPlayer>
 #include <QGraphicsScene>
 #include <QGraphicsPixmapItem>
 
 #include "opennetdialog.h"
-#include "frameprobevsurface.h"
-#include "processor.h"
 #include "abstractoutput.h"
+#include "abstractviewer.h"
+#include "processor.h"
+#include "capture.h"
+#include "converter.h"
 
 namespace Ui {
 class MainWindow;
@@ -26,13 +26,13 @@ public:
     ~MainWindow();
 
 public slots:
-    void openVideo();
-    void openImage();
+    void setVideo();
+    void setImage();
     void setCamera();
 
     void play();
     void setVideoPos(int pos);
-    void mediaStateChanged(QMediaPlayer::State state);
+//    void mediaStateChanged(QMediaPlayer::State state);
     void positionChanged(qint64 pos);
     void durationChanged(qint64 dur);
 
@@ -43,18 +43,20 @@ private slots:
 private:
     void clear();
 
-    QThread procThread;
-    QThread probThread;
+    QThread thread1;
+    QThread thread2;
+    QThread thread3;
+    QThread thread4;
 
     QGraphicsScene *scene;
-    QMediaPlayer *player;
-    QCamera *camera;
-
     QGraphicsPixmapItem *vitem;
-    FrameProbeVSurface *probe;
+
+    Capture *capture;
+    Converter *converter;
+    Processor *proc;
+    AbstractViewer *viewer;
     AbstractOutput *output;
 
-    Ui::MainWindow *ui;
     OpenNetDialog *net_dialog;
-    Processor *proc;
+    Ui::MainWindow *ui;
 };
