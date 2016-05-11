@@ -30,6 +30,10 @@ void GraphicsPixmapItemViewer::displayImage(const QImage &img) {
     }
 }
 
+void GraphicsPixmapItemViewer::setOverlay(const QPixmap &pm) {
+    //TODO:
+}
+
 void GraphicsPixmapItemViewer::resizeEvent(QResizeEvent *event) {
     Q_UNUSED(event)
 

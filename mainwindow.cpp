@@ -26,27 +26,20 @@ MainWindow::MainWindow(QWidget *parent)
     , thread2()
     , thread3()
     , thread4()
-    , vitem(new QGraphicsPixmapItem())
+    , scene(new QGraphicsScene())
     , capture(new Capture())
     , converter(new Converter())
-    , proc(nullptr)
     , viewer(nullptr)
-    , output(nullptr)
+    , output(new DrawingOutput())
+    , proc(new Processor(output))
     , net_dialog(new OpenNetDialog(this))
     , ui(new Ui::MainWindow)
 {
     qRegisterMetaType<cv::Mat>();
-
     ui->setupUi(this);
 
-    scene = new QGraphicsScene(this);
     ui->graphicsView->setScene(scene);
-//    vitem->setPos(0, 0);
-    scene->addItem(vitem);
-//    viewer = new GraphicsPixmapItemViewer(ui->graphicsView, vitem);
     viewer = new LabelViewer(ui->label);
-    output = new DrawingOutput(ui->graphicsView, vitem);
-    proc = new Processor(output);
     converter->setProcessAll(false);
 
     ui->pushButtonPlay->setEnabled(false);
@@ -71,9 +64,9 @@ MainWindow::MainWindow(QWidget *parent)
 
     ui->graphicsView->viewport()->installEventFilter(this);
 
-//    TODO: remove then this temp and debug code
+//    TODO: remove then
     cout << "main thread " << QThread::currentThreadId() << endl;
-//    ui->pushButtonOpenVideo->setEnabled(false); // ...as this doesn't work
+//    ui->pushButtonOpenVideo->setEnabled(false); // ...as video doesn't work
     ui->pushButtonOpenDetector->setEnabled(false); // ...as this is not implemented yet
 
     //TODO: think about ThreadPool
@@ -90,6 +83,7 @@ MainWindow::MainWindow(QWidget *parent)
     connect(capture, &Capture::matReady, proc, &Processor::receiveFrame, Qt::QueuedConnection);
     connect(capture, &Capture::matReady, converter, &Converter::processFrame, Qt::QueuedConnection);
     connect(converter, &Converter::imageReady, viewer, &AbstractViewer::displayImage, Qt::QueuedConnection);
+    connect(output, &AbstractOutput::outputReady, viewer, &AbstractViewer::setOverlay, Qt::QueuedConnection);
 }
 
 MainWindow::~MainWindow()
@@ -125,12 +119,8 @@ void MainWindow::setVideo() {
 
     if (!filename.isEmpty()) {
         clear();
-
         QMetaObject::invokeMethod(capture, "startVideo", Q_ARG(QString, filename));
         ui->pushButtonPlay->setEnabled(true);
-
-//        vitem->setSize(QSizeF(ui->graphicsView->rect().size()));
-        ui->graphicsView->fitInView(vitem, Qt::KeepAspectRatio);
     }
 }
 
@@ -144,9 +134,6 @@ void MainWindow::setCamera() {
 //      TODO: dialog to choose camera
         QMetaObject::invokeMethod(capture, "startCamera");
     }
-
-//    vitem->setSize(QSizeF(ui->graphicsView->rect().size()));
-    ui->graphicsView->fitInView(vitem, Qt::KeepAspectRatio);
 }
 
 void MainWindow::setImage() {
@@ -156,11 +143,8 @@ void MainWindow::setImage() {
 
     if (!filename.isEmpty()) {
         clear();
-
         proc->setProcessing(true);
         QMetaObject::invokeMethod(capture, "startImage", Q_ARG(QString, filename));
-
-        ui->graphicsView->fitInView(vitem, Qt::KeepAspectRatio);
     }
 }
 

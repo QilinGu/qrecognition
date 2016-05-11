@@ -13,6 +13,7 @@ public:
     GraphicsPixmapItemViewer(QGraphicsView *view, QGraphicsPixmapItem *display, QObject *parent = nullptr);
 
     void displayImage(const QImage &img) override;
+    void setOverlay(const QPixmap &pm) override;
     void resizeEvent(QResizeEvent *event) override;
 
 private:

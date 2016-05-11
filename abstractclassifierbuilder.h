@@ -6,4 +6,5 @@ class AbstractClassifierBuilder
 {
 public:
     virtual AbstractClassifier *buildClassifier() = 0;
+    virtual ~AbstractClassifierBuilder() {}
 };

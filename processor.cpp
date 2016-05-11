@@ -57,6 +57,7 @@ void Processor::initDetector() {
 }
 
 void Processor::loadLabels(const string &labels_file) {
+    Q_UNUSED(labels_file)
 //    vector<string> labels;
 
 //    /* Load labels. */
@@ -92,7 +93,7 @@ void Processor::receiveFrame(const cv::Mat &frame) {
             auto now = std::chrono::high_resolution_clock::now();
             auto now_ms = std::chrono::time_point_cast<std::chrono::milliseconds>(now);
 
-    //        process(frame);
+            process(frame);
 
             auto now_end = std::chrono::high_resolution_clock::now();
             auto now_end_ms = std::chrono::time_point_cast<std::chrono::milliseconds>(now_end);
@@ -108,7 +109,7 @@ void Processor::receiveFrame(const cv::Mat &frame) {
 
 void Processor::process(const cv::Mat &img) {
 
-    // if user specified detector, then detect objects from image
+    // If user specified detector, then detect objects from image.
     vector<cv::Mat> detected;
     vector<cv::Rect> boxes;
     if (dt_) {
@@ -118,11 +119,15 @@ void Processor::process(const cv::Mat &img) {
         detected.push_back(img);
     }
 
-    // if user specified classifier, then classify detected images
+    // If user specified classifier, then classify detected images.
     vector<vector<Prediction> > classified;
     if (cl_) {
        classified = cl_->classify(detected, 5);
     }
+
+    // Prepare output.
+    cv::Size s(img.cols, img.rows);
+    out_->update(s);
 
     if (dt_) {
         if (cl_) {
@@ -143,5 +148,7 @@ void Processor::process(const cv::Mat &img) {
 
 // TODO: cropImages()
 vector<cv::Mat> Processor::cropImages(const std::vector<cv::Rect> &boxes) {
+    Q_UNUSED(boxes)
+
     return vector<cv::Mat>();
 }

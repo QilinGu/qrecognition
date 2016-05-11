@@ -6,4 +6,5 @@ class AbstractDetectorBuilder
 {
 public:
     virtual AbstractDetector *buildDetector() = 0;
+    virtual ~AbstractDetectorBuilder() {}
 };

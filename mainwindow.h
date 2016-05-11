@@ -4,7 +4,6 @@
 #include <QThread>
 
 #include <QGraphicsScene>
-#include <QGraphicsPixmapItem>
 
 #include "opennetdialog.h"
 #include "abstractoutput.h"
@@ -49,13 +48,12 @@ private:
     QThread thread4;
 
     QGraphicsScene *scene;
-    QGraphicsPixmapItem *vitem;
 
     Capture *capture;
     Converter *converter;
-    Processor *proc;
     AbstractViewer *viewer;
     AbstractOutput *output;
+    Processor *proc;
 
     OpenNetDialog *net_dialog;
     Ui::MainWindow *ui;

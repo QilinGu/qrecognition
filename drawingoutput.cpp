@@ -2,27 +2,24 @@
 
 #include <iostream>
 
+#include <QDebug>
 #include <QColor>
 
 using namespace std;
 
-DrawingOutput::DrawingOutput(QGraphicsView *view, QGraphicsPixmapItem *display)
-    : view_(view)
-    , vitem_(display)
-    , orig_img_size_()
-    , boxes_()
+DrawingOutput::DrawingOutput(QObject *parent)
+    : AbstractOutput(parent)
+    , pen_(Qt::red, 3)
 {
-    pen_.setColor(QColor("lime"));
-    pen_.setWidth(3);
     pen_.setStyle(Qt::SolidLine);
-    brush_.setStyle(Qt::NoBrush);
+
+    //TODO: remove then: test
+    boxes_.push_back(QRectF(30, 30, 100, 200));
+
 }
 
-DrawingOutput::DrawingOutput(QGraphicsView *view, QGraphicsPixmapItem *display, QPen pen, QBrush brush)
-    : view_(view)
-    , vitem_(display)
-    , orig_img_size_()
-    , boxes_()
+DrawingOutput::DrawingOutput(QPen pen, QBrush brush, QObject *parent)
+    : AbstractOutput(parent)
     , pen_(pen)
     , brush_(brush)
 {
@@ -44,10 +41,11 @@ void DrawingOutput::output(const std::vector<std::pair<int, float> > &prediction
 void DrawingOutput::output(const std::vector<cv::Rect> &boxes) {
     boxes_.clear();
     for (cv::Rect box : boxes) {
-        boxes_.push_back( view_->scene()->addRect( convertToRectF(box), pen_, brush_ ) );
+        boxes_.push_back(toQRectF(box));
     }
 }
 
+//TODO: draw predictions
 void DrawingOutput::output(const std::vector<cv::Rect> &boxes,
                            const std::vector<std::vector<std::pair<int, float> > > &predictions) {
 
@@ -55,38 +53,42 @@ void DrawingOutput::output(const std::vector<cv::Rect> &boxes,
 
     boxes_.clear();
     for (cv::Rect box : boxes) {
-        boxes_.push_back( view_->scene()->addRect( convertToRectF(box), pen_, brush_ ) );
+        boxes_.push_back(toQRectF(box));
 
-        //TODO: draw predictions
     }
 }
 
-void DrawingOutput::update(cv::Size new_img_size) {
-    this->update(orig_img_size_, new_img_size);
+void DrawingOutput::update() {
+    update(cv::Size());
 }
 
-void DrawingOutput::update(cv::Size orig_img_size, cv::Size new_img_size) {
+void DrawingOutput::update(cv::Size orig_img_size) {
     if (orig_img_size != cv::Size()) {
-        orig_img_size_ = orig_img_size;
-
-        qreal x_coef = (float)new_img_size.width / (float)orig_img_size.width;
-        qreal y_coef = (float)new_img_size.height / (float)orig_img_size.height;
-
-        // TODO: pos change for boxes
-        for (QGraphicsRectItem *box : boxes_) {
-
-            auto r = box->rect();
-            qreal new_w = r.width() * x_coef;
-            qreal new_h = r.height() * y_coef;
-
-            box->setRect(r.x(), r.y(), new_w, new_h);
-
-//            QPointF new_pos = box->scenePos() +
-//            box->setPos(box->scenePos());
+        if (orig_img_size != orig_img_size_) {
+            setOrigSize(orig_img_size);
         }
+
+        p_.drawRects(boxes_);
+
+        emit outputReady(output_pm_);
     }
 }
 
-QRectF DrawingOutput::convertToRectF(const cv::Rect &rect) {
+void DrawingOutput::setOrigSize(cv::Size orig_img_size) {
+    orig_img_size_ = orig_img_size;
+    QSize orig_size = toQSize(orig_img_size_);
+    output_pm_ = QPixmap(orig_size);
+    output_pm_.fill(Qt::transparent);
+
+    p_.begin(&output_pm_);
+    p_.setPen(pen_);
+    p_.setBrush(brush_);
+}
+
+QRectF DrawingOutput::toQRectF(const cv::Rect &rect) {
     return QRectF(rect.x, rect.y, rect.width, rect.height);
+}
+
+QSize DrawingOutput::toQSize(const cv::Size &size) {
+    return QSize(size.width, size.height);
 }

@@ -3,11 +3,17 @@
 #include <vector>
 #include <string>
 
+#include <QObject>
+
 #include <opencv/cv.hpp>
 
-class AbstractOutput
+class AbstractOutput : public QObject
 {
+    Q_OBJECT
 public:
+    explicit AbstractOutput(QObject *parent = nullptr);
+    virtual ~AbstractOutput();
+
     /* Returns true if loading was successful.
      * @num_labels is needed to verify labels count in @labels_file. */
     virtual bool loadLabels(const std::string &labels_file, int num_labels);
@@ -18,10 +24,11 @@ public:
     virtual void output(const std::vector<cv::Rect> &boxes,
                         const std::vector<std::vector<std::pair<int, float> > > &predictions) = 0;
 
-    virtual void update(cv::Size new_img_size) = 0;
-    virtual void update(cv::Size orig_img_size, cv::Size new_img_size) = 0;
+    virtual void update() = 0;
+    virtual void update(cv::Size orig_img_size) = 0;
 
-    virtual ~AbstractOutput();
+signals:
+    void outputReady(const QPixmap &pm);
 
 protected:
     std::vector<std::string> labels_;

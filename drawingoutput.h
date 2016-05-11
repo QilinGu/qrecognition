@@ -6,10 +6,12 @@
 #include <opencv/cv.hpp>
 
 #include <QImage>
-#include <QGraphicsView>
-#include <QGraphicsPixmapItem>
+#include <QPixmap>
+#include <QVector>
+#include <QLabel>
 #include <QPen>
 #include <QBrush>
+#include <QPainter>
 #include <QRectF>
 
 #include "abstractoutput.h"
@@ -17,27 +19,28 @@
 class DrawingOutput : public AbstractOutput
 {
 public:
-    DrawingOutput(QGraphicsView *view, QGraphicsPixmapItem *display);
-    DrawingOutput(QGraphicsView *view, QGraphicsPixmapItem *display,
-                  QPen pen, QBrush brush);
+    explicit DrawingOutput(QObject *parent = nullptr);
+    DrawingOutput(QPen pen, QBrush brush, QObject *parent = nullptr);
 
     void output(const std::vector<std::pair<int, float> > &predictions) override;
     void output(const std::vector<cv::Rect> &boxes) override;
     void output(const std::vector<cv::Rect> &boxes,
                 const std::vector<std::vector<std::pair<int, float> > > &predictions) override;
 
-    void update(cv::Size new_img_size) override;
-    void update(cv::Size orig_img_size, cv::Size new_img_size) override;
+    void update() override;
+    void update(cv::Size orig_img_size) override;
 
 private:
-    QGraphicsView *view_;
-    QGraphicsPixmapItem *vitem_;
+    QPixmap output_pm_;
     cv::Size orig_img_size_;
-    std::vector<QGraphicsRectItem *> boxes_;
+    QVector<QRectF> boxes_;
 
     QPen pen_;
     QBrush brush_;
+    QPainter p_;
 
-    QRectF convertToRectF(const cv::Rect &rect);
+    void setOrigSize(cv::Size orig_img_size);
+    QRectF toQRectF(const cv::Rect &rect);
+    QSize toQSize(const cv::Size &size);
 
 };
