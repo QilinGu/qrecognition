@@ -20,6 +20,7 @@ Processor::Processor(AbstractOutput *output, QObject *parent)
     , out_(output)
     , is_ready_(true)
     , is_processing_(false)
+    , is_oneshot_(false)
 {}
 
 Processor::~Processor() {
@@ -72,14 +73,19 @@ void Processor::loadLabels(const string &labels_file) {
 //        << "Number of labels is different from the output layer dimension.";
 }
 
+//TODO: mutex
 void Processor::changeStateProcessing() {
-    //TODO: mutex
     is_processing_ = !is_processing_;
 }
 
+//TODO: mutex
 void Processor::setProcessing(bool is_processing) {
-    //TODO: mutex
     is_processing_ = is_processing;
+}
+
+//TODO: mutex
+void Processor::setOneshot(bool is_oneshot) {
+    is_oneshot_ = is_oneshot;
 }
 
 void Processor::receiveFrame(const cv::Mat &frame) {
@@ -101,8 +107,11 @@ void Processor::receiveFrame(const cv::Mat &frame) {
             long dur = val.count();
             cout << "frame " << ++i << " processed in " << dur << endl;
 
-    //      TODO: mutex
+    //      TODO: mutexes
             is_ready_ = true;
+            if (is_oneshot_) {
+                is_processing_ = false;
+            }
         }
     }
 }

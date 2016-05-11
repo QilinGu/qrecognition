@@ -22,13 +22,15 @@ void LabelViewer::displayImage(const QImage &img) {
         auto now_ms = std::chrono::time_point_cast<std::chrono::milliseconds>(now);
         auto val = now_ms.time_since_epoch();
         long dur = val.count();
-        std::cout << "frame presented at " << dur << std::endl;
+        std::cout << "Viewer: frame presented at " << dur << std::endl;
 
-        QPixmap bg = QPixmap::fromImage(img).scaled(bg_display_->size(), Qt::KeepAspectRatio, Qt::SmoothTransformation);
-        bg_display_->setPixmap(bg);
+        image_ = QPixmap::fromImage(img);
+        bg_display_->setPixmap( image_.scaled(bg_display_->size(), Qt::KeepAspectRatio, Qt::SmoothTransformation) );
+
+//        qDebug() << "Viewer: Orig image size is : " << image_.size().width() << " : " << image_.size().height();
 
     } else {
-        qDebug() << "Viewer received null image!";
+        qDebug() << "Viewer: received null image!";
     }
 }
 
@@ -48,9 +50,8 @@ void LabelViewer::setOverlay(const QPixmap &pm) {
 void LabelViewer::resizeEvent(QResizeEvent *event) {
     Q_UNUSED(event)
 
-    auto bg = bg_display_->pixmap();
-    if (bg) {
-        bg_display_->setPixmap( bg->scaled(bg_display_->size(), Qt::KeepAspectRatio, Qt::SmoothTransformation) );
+    if (!image_.isNull()) {
+        bg_display_->setPixmap( image_.scaled(bg_display_->size(), Qt::KeepAspectRatio, Qt::FastTransformation) );
         fg_display_->setGeometry(0, 0, bg_display_->width(), bg_display_->height());
         fg_display_->setPixmap( overlay_.scaled(bg_display_->pixmap()->size(), Qt::KeepAspectRatio, Qt::FastTransformation) );
     }

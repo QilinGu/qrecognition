@@ -21,8 +21,10 @@ public:
 
 public slots:
     void receiveFrame(const cv::Mat &frame);
+
     void changeStateProcessing();
     void setProcessing(bool is_processing);
+    void setOneshot(bool is_oneshot);
 
     void initClassifier();
     void initDetector();
@@ -36,6 +38,7 @@ private:
 
     bool is_ready_;
     bool is_processing_;
+    bool is_oneshot_;
 
     /*dbg*/int i = 0;
 

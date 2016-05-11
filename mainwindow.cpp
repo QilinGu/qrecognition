@@ -143,6 +143,7 @@ void MainWindow::setImage() {
 
     if (!filename.isEmpty()) {
         clear();
+        proc->setOneshot(true);
         proc->setProcessing(true);
         QMetaObject::invokeMethod(capture, "startImage", Q_ARG(QString, filename));
     }

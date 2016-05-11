@@ -19,5 +19,6 @@ public:
 private:
     QLabel *bg_display_;
     QLabel *fg_display_;
+    QPixmap image_;
     QPixmap overlay_;
 };
