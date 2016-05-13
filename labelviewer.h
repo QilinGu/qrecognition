@@ -1,5 +1,6 @@
 #pragma once
 
+#include <QMutex>
 #include <QObject>
 #include <QImage>
 #include <QPixmap>
@@ -14,11 +15,12 @@ public:
 
     void displayImage(const QImage &img) override;
     void setOverlay(const QPixmap &pm) override;
-    void resizeEvent(QResizeEvent *event) override;
+    void resizeEvent(QResizeEvent *event = nullptr) override;
 
 private:
     QLabel *bg_display_;
     QLabel *fg_display_;
     QPixmap image_;
     QPixmap overlay_;
+    QMutex mutex_;
 };

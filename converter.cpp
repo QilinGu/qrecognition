@@ -27,6 +27,9 @@ void Converter::process(cv::Mat frame) {
     const QImage image(frame.data, frame.cols, frame.rows, frame.step,
                        QImage::Format_RGB888, &matDeleter, new cv::Mat(frame));
 
+//     enforce deep copy
+//    image.bits();
+
     Q_ASSERT(image.constBits() == frame.data);
 
     emit imageReady(image);

@@ -36,10 +36,6 @@ Processor::~Processor() {
     if (!builder_cl_) {
         delete builder_cl_;
     }
-    // TODO: check this
-    if (!out_) {
-        delete out_;
-    }
 }
 
 void Processor::initClassifier() {
@@ -73,47 +69,58 @@ void Processor::loadLabels(const string &labels_file) {
 //        << "Number of labels is different from the output layer dimension.";
 }
 
-//TODO: mutex
 void Processor::changeStateProcessing() {
+    mutex_.lockForWrite();
     is_processing_ = !is_processing_;
+    mutex_.unlock();
 }
 
-//TODO: mutex
 void Processor::setProcessing(bool is_processing) {
+    mutex_.lockForWrite();
     is_processing_ = is_processing;
+    mutex_.unlock();
 }
 
-//TODO: mutex
 void Processor::setOneshot(bool is_oneshot) {
+    mutex_.lockForWrite();
     is_oneshot_ = is_oneshot;
+    mutex_.unlock();
 }
 
 void Processor::receiveFrame(const cv::Mat &frame) {
 
-//    TODO: mutexes - for both bools
+    mutex_.lockForRead();
     if (is_processing_) {
+        mutex_.unlock();
+        mutex_.lockForWrite();
         if (is_ready_) {
             is_ready_ = false;
+            mutex_.unlock();
 
     //      TODO: Do somthing with time benchmarking -- it is useful.
             auto now = std::chrono::high_resolution_clock::now();
             auto now_ms = std::chrono::time_point_cast<std::chrono::milliseconds>(now);
 
+//            qDebug() << "Processor: frame size: " << frame.cols << " : " << frame.rows;
             process(frame);
+//            sleep(1);
 
             auto now_end = std::chrono::high_resolution_clock::now();
             auto now_end_ms = std::chrono::time_point_cast<std::chrono::milliseconds>(now_end);
             auto val = now_end_ms.time_since_epoch() - now_ms.time_since_epoch();
             long dur = val.count();
-            cout << "frame " << ++i << " processed in " << dur << endl;
+            qDebug() << "Processor: frame " << ++i << " processed in " << dur << endl;
 
-    //      TODO: mutexes
+            mutex_.lockForWrite();
             is_ready_ = true;
             if (is_oneshot_) {
                 is_processing_ = false;
             }
+            mutex_.unlock();
         }
+        mutex_.unlock();
     }
+    mutex_.unlock();
 }
 
 void Processor::process(const cv::Mat &img) {
@@ -136,20 +143,23 @@ void Processor::process(const cv::Mat &img) {
 
     // Prepare output.
     cv::Size s(img.cols, img.rows);
+    ++i;
+    boxes.push_back(cv::Rect(i, i, i, i));
+    out_->setOutput(boxes);
     out_->update(s);
 
     if (dt_) {
         if (cl_) {
-            out_->output(boxes, classified);
+            out_->setOutput(boxes, classified);
         } else {
-            out_->output(boxes);
+            out_->setOutput(boxes);
         }
     } else {
         if (cl_) {
-            out_->output(classified[0]);
+            out_->setOutput(classified[0]);
         } else {
             //TODO: case for output when there is no both cl and dt
-            qDebug() << "Either classifier or detecor were not specified - nothing to do.";
+//            qDebug() << "Processor: either classifier or detecor were not specified - nothing to do.";
         }
 
     }

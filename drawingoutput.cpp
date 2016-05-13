@@ -9,13 +9,9 @@ using namespace std;
 
 DrawingOutput::DrawingOutput(QObject *parent)
     : AbstractOutput(parent)
-    , pen_(Qt::red, 3)
+    , pen_(Qt::red, 2)
 {
     pen_.setStyle(Qt::SolidLine);
-
-    //TODO: remove then: test
-    boxes_.push_back(QRectF(30, 30, 100, 200));
-
 }
 
 DrawingOutput::DrawingOutput(QPen pen, QBrush brush, QObject *parent)
@@ -23,10 +19,11 @@ DrawingOutput::DrawingOutput(QPen pen, QBrush brush, QObject *parent)
     , pen_(pen)
     , brush_(brush)
 {
+    //TODO: don't forget this constructor
 }
 
 //TODO: output only predictions
-void DrawingOutput::output(const std::vector<std::pair<int, float> > &predictions) {
+void DrawingOutput::setOutput(const std::vector<std::pair<int, float> > &predictions) {
     if (!is_labels_) {
         for (auto pred : predictions) {
             cout << pred.first << " : probability " << pred.second << endl;
@@ -38,7 +35,7 @@ void DrawingOutput::output(const std::vector<std::pair<int, float> > &prediction
     }
 }
 
-void DrawingOutput::output(const std::vector<cv::Rect> &boxes) {
+void DrawingOutput::setOutput(const std::vector<cv::Rect> &boxes) {
     boxes_.clear();
     for (cv::Rect box : boxes) {
         boxes_.push_back(toQRectF(box));
@@ -46,8 +43,8 @@ void DrawingOutput::output(const std::vector<cv::Rect> &boxes) {
 }
 
 //TODO: draw predictions
-void DrawingOutput::output(const std::vector<cv::Rect> &boxes,
-                           const std::vector<std::vector<std::pair<int, float> > > &predictions) {
+void DrawingOutput::setOutput(const std::vector<cv::Rect> &boxes,
+                              const std::vector<std::vector<std::pair<int, float> > > &predictions) {
 
     Q_ASSERT(boxes.size() == predictions.size());
 
@@ -59,36 +56,35 @@ void DrawingOutput::output(const std::vector<cv::Rect> &boxes,
 }
 
 void DrawingOutput::update() {
-    update(cv::Size());
+    update(orig_img_size_);
 }
 
 void DrawingOutput::update(cv::Size orig_img_size) {
     if (orig_img_size != cv::Size()) {
-        if (orig_img_size != orig_img_size_) {
-            setOrigSize(orig_img_size);
+        if (orig_img_size_ != orig_img_size) {
+            resetEmptyOverlay(orig_img_size);
         }
 
+        Q_ASSERT(!overlay_.isNull());
+
+        p_.fillRect(overlay_.rect(), Qt::transparent);
         p_.drawRects(boxes_);
 
-        emit outputReady(output_pm_);
+//        emit outputReady( overlay_.copy(overlay_.rect()) );
+        emit outputReady( overlay_ );
     }
 }
 
-void DrawingOutput::setOrigSize(cv::Size orig_img_size) {
+void DrawingOutput::resetEmptyOverlay(cv::Size orig_img_size) {
     orig_img_size_ = orig_img_size;
-    QSize orig_size = toQSize(orig_img_size_);
-    output_pm_ = QPixmap(orig_size);
-    output_pm_.fill(Qt::transparent);
+    overlay_ = QPixmap( toQSize(orig_img_size_) );
+    if (!p_.isActive()) {
+        overlay_.fill(Qt::transparent);
+        p_.begin(&overlay_);
+        p_.setPen(pen_);
+        p_.setBrush(brush_);
+        p_.setCompositionMode(QPainter::CompositionMode_Source);
+    }
 
-    p_.begin(&output_pm_);
-    p_.setPen(pen_);
-    p_.setBrush(brush_);
-}
-
-QRectF DrawingOutput::toQRectF(const cv::Rect &rect) {
-    return QRectF(rect.x, rect.y, rect.width, rect.height);
-}
-
-QSize DrawingOutput::toQSize(const cv::Size &size) {
-    return QSize(size.width, size.height);
+    Q_ASSERT(overlay_.paintingActive());
 }

@@ -29,7 +29,6 @@ SOURCES += main.cpp\
     abstractclassifier.cpp \
     capture.cpp \
     converter.cpp \
-    graphicspixmapitemviewer.cpp \
     labelviewer.cpp
 
 HEADERS  += mainwindow.h \
@@ -46,7 +45,6 @@ HEADERS  += mainwindow.h \
     capture.h \
     converter.h \
     abstractviewer.h \
-    graphicspixmapitemviewer.h \
     labelviewer.h
 
 FORMS    += mainwindow.ui \

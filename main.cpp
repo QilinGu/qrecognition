@@ -8,6 +8,8 @@
 #include <opencv2/xobjdetect.hpp>
 
 #include "classifier.h"
+
+#include <QDebug>
 #include <QImage>
 
 using namespace std;
@@ -52,13 +54,16 @@ void testPredict() {
     Classifier classifier(model_file, trained_file, mean_file);
 
     /* Load images */
-    int batch_size = 3;
+    int batch_size = 1;
     int topN = 3;
     vector<cv::Mat> imgs;
     for (int i = 0; i < batch_size; ++i) {
         string img_file = "/home/gkirg/projects/compvis/analyze/own_data/0000" + to_string(i+1) + ".ppm";
 
-        cv::Mat img = cv::imread(img_file, -1);
+//        cv::Mat img = cv::imread(img_file, -1);
+        cv::VideoCapture cap(img_file.c_str());
+        cv::Mat img;
+        cap.read(img);
 
         CHECK(!img.empty()) << "Unable to decode image " << img_file;
         imgs.push_back(img);
@@ -122,12 +127,33 @@ void trainDetector() {
 
 }
 
+void testBackend() {
+    string ifile = "/home/gkirg/projects/compvis/analyze/own_data/00001.ppm";
+    string vfile = "/media/Videos/Golodnye_igry_Soika_2.avi";
+    string tifile = "/media/Documents/datasets/GTSRB/Final_Training/Images/00002/00000_00028.ppm";
+    cv::VideoCapture cap(ifile.c_str());
+
+    cv::Mat i1 = cv::imread(ifile.c_str());
+    cv::Mat c1;
+
+    cap.read(c1);
+
+    qDebug() << "i1 size " << i1.cols << i1.rows;
+    qDebug() << "c1 size " << c1.cols << c1.rows;
+
+    auto diff = c1 != i1;
+    auto countdiff = cv::countNonZero(diff);
+    qDebug() << "Diff is " << countdiff;
+
+}
+
 int main(int argc, char *argv[])
 {
     QApplication a(argc, argv);
     MainWindow w;
     w.show();
 
+//    testBackend();
 //    testPredict();
 //    trainDetector();
 

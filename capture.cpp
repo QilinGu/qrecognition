@@ -11,9 +11,7 @@ Capture::Capture(QObject *parent) : QObject(parent)
 }
 
 void Capture::startImage(const QString &file) {
-    if (!vcapture_) {
-        vcapture_.reset(new cv::VideoCapture(file.toStdString()));
-    }
+    vcapture_.reset(new cv::VideoCapture(file.toStdString()));
     if (vcapture_->isOpened()) {
         timer_.start(0, this);
         emit started();

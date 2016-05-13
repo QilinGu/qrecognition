@@ -3,6 +3,8 @@
 #include <vector>
 
 #include <QObject>
+#include <QMutex>
+#include <QReadWriteLock>
 
 #include <opencv2/opencv.hpp>
 
@@ -39,6 +41,8 @@ private:
     bool is_ready_;
     bool is_processing_;
     bool is_oneshot_;
+
+    QReadWriteLock mutex_;
 
     /*dbg*/int i = 0;
 

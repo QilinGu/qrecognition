@@ -31,6 +31,7 @@ void GraphicsPixmapItemViewer::displayImage(const QImage &img) {
 }
 
 void GraphicsPixmapItemViewer::setOverlay(const QPixmap &pm) {
+    Q_UNUSED(pm);
     //TODO:
 }
 
