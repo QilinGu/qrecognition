@@ -1,8 +1,6 @@
 #include "mainwindow.h"
 #include "ui_mainwindow.h"
 
-#include <iostream>
-
 #include <QMetaObject>
 #include <QDebug>
 #include <QUrl>
@@ -44,32 +42,34 @@ MainWindow::MainWindow(QWidget *parent)
 
     ui->pushButtonPlay->setEnabled(false);
 //    ui->pushButtonPlay->setIcon(style()->standardIcon(QStyle::SP_MediaPlay));
-    ui->horizontalSliderSeek->setRange(0, 0);
+    ui->sliderSeek->setRange(0, 0);
 
     connect(ui->pushButtonOpenClassifier, &QPushButton::clicked, proc, &Processor::initClassifier);
     connect(ui->pushButtonOpenDetector, &QPushButton::clicked, proc, &Processor::initDetector);
     connect(ui->pushButtonStartCl, &QPushButton::clicked, proc, &Processor::changeStateProcessing);
-    connect(ui->pushButtonPlay, &QPushButton::clicked, this, &MainWindow::play);
-    connect(ui->horizontalSliderSeek, &QSlider::sliderMoved, this, &MainWindow::setVideoPos);
 
     connect(ui->pushButtonOpenVideo, &QPushButton::clicked, this, &MainWindow::setVideo);
     connect(ui->pushButtonOpenImage, &QPushButton::clicked, this, &MainWindow::setImage);
     connect(ui->pushButtonCamera, &QPushButton::clicked, this, &MainWindow::setCamera);
     ui->pushButtonCamera->setEnabled( QCameraInfo::availableCameras().count() > 0 );
 
-//    TODO: what to do with player signals?
+    connect(ui->pushButtonPlay, &QPushButton::clicked, capture, &Capture::changeStatePlaying);
+    connect(ui->sliderSeek, &QSlider::sliderMoved, capture, &Capture::changeVideoPos);
+    connect(ui->sliderSpeed, &QSlider::sliderMoved, capture, &Capture::changePlaybackSpeed);
+    connect(ui->pushButtonSetDefSpeed, &QPushButton::clicked, capture, &Capture::setDefaultPlaybackSpeed);
 //    connect(player, &QMediaPlayer::stateChanged, this, &MainWindow::mediaStateChanged);
-//    connect(player, &QMediaPlayer::positionChanged, this, &MainWindow::positionChanged);
-//    connect(player, &QMediaPlayer::durationChanged, this, &MainWindow::durationChanged);
-
-    ui->graphicsView->viewport()->installEventFilter(this);
+    connect(capture, &Capture::positionChanged, this, &MainWindow::positionChanged);
+    connect(capture, &Capture::durationChanged, this, &MainWindow::durationChanged);
+    connect(capture, &Capture::playbackSpeedChanged, this, &MainWindow::playbackSpeedChanged);
+    ui->pushButtonSetDefSpeed->setEnabled(false);
+    ui->sliderSpeed->setRange(1, 121);
+    ui->sliderSpeed->setEnabled(false);
+    ui->sliderSeek->setEnabled(false);
 
 //    TODO: remove then
-    cout << "main thread " << QThread::currentThreadId() << endl;
-//    ui->pushButtonOpenVideo->setEnabled(false); // ...as video doesn't work
+    qDebug() << "main thread " << QThread::currentThreadId();
     ui->pushButtonOpenDetector->setEnabled(false); // ...as this is not implemented yet
 
-    //TODO: think about ThreadPool
     capture->moveToThread(&thread1);
     proc->moveToThread(&thread2);
 //    output->moveToThread(&thread2);
@@ -118,15 +118,18 @@ void MainWindow::setVideo() {
         tr("Open Video"), QDir::homePath(), tr("Video Files (*)"));
 
     if (!filename.isEmpty()) {
-        clear();
+        reset();
         QMetaObject::invokeMethod(capture, "startVideo", Q_ARG(QString, filename));
         ui->pushButtonPlay->setEnabled(true);
+        ui->pushButtonSetDefSpeed->setEnabled(true);
+        ui->sliderSeek->setEnabled(true);
+        ui->sliderSpeed->setEnabled(true);
     }
 }
 
 void MainWindow::setCamera() {
     // It is supposed that this method invoked only when there exist cameras.
-    clear();
+    reset();
     auto cameras = QCameraInfo::availableCameras();
     if (cameras.count() == 1) {
         QMetaObject::invokeMethod(capture, "startCamera");
@@ -142,23 +145,21 @@ void MainWindow::setImage() {
         tr("Open Image"), QDir::homePath(), tr("Image Files (*)"));
 
     if (!filename.isEmpty()) {
-        clear();
+        reset();
         proc->setOneshot(true);
-//        proc->setProcessing(true);
+        proc->setProcessing(true);
         QMetaObject::invokeMethod(capture, "startImage", Q_ARG(QString, filename));
     }
 }
 
-void MainWindow::clear() {
+void MainWindow::reset() {
     QMetaObject::invokeMethod(capture, "stop");
+    proc->setProcessing(false);
+    proc->setOneshot(false);
     ui->pushButtonPlay->setEnabled(false);
-}
-
-void MainWindow::play() {
-}
-
-void MainWindow::setVideoPos(int pos) {
-    Q_UNUSED(pos);
+    ui->pushButtonSetDefSpeed->setEnabled(false);
+    ui->sliderSeek->setEnabled(false);
+    ui->sliderSpeed->setEnabled(false);
 }
 
 //void MainWindow::mediaStateChanged(QMediaPlayer::State state)
@@ -174,9 +175,13 @@ void MainWindow::setVideoPos(int pos) {
 //}
 
 void MainWindow::positionChanged(qint64 position) {
-    ui->horizontalSliderSeek->setValue(position);
+    ui->sliderSeek->setValue(position);
 }
 
 void MainWindow::durationChanged(qint64 duration) {
-    ui->horizontalSliderSeek->setRange(0, duration);
+    ui->sliderSeek->setRange(0, duration);
+}
+
+void MainWindow::playbackSpeedChanged(qint64 fps) {
+    ui->sliderSpeed->setValue(fps);
 }

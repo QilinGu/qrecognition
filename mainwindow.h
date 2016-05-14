@@ -29,18 +29,17 @@ public slots:
     void setImage();
     void setCamera();
 
-    void play();
-    void setVideoPos(int pos);
 //    void mediaStateChanged(QMediaPlayer::State state);
     void positionChanged(qint64 pos);
     void durationChanged(qint64 dur);
+    void playbackSpeedChanged(qint64 fps);
 
 private slots:
     void resizeEvent(QResizeEvent *event) override;
     bool eventFilter(QObject *obj, QEvent *ev) override;
 
 private:
-    void clear();
+    void reset();
 
     QThread thread1;
     QThread thread2;

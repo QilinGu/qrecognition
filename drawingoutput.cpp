@@ -77,14 +77,21 @@ void DrawingOutput::update(cv::Size orig_img_size) {
 
 void DrawingOutput::resetEmptyOverlay(cv::Size orig_img_size) {
     orig_img_size_ = orig_img_size;
+    p_.end();
     overlay_ = QPixmap( toQSize(orig_img_size_) );
-    if (!p_.isActive()) {
-        overlay_.fill(Qt::transparent);
-        p_.begin(&overlay_);
-        p_.setPen(pen_);
-        p_.setBrush(brush_);
-        p_.setCompositionMode(QPainter::CompositionMode_Source);
-    }
+    overlay_.fill(Qt::transparent);
+    p_.begin(&overlay_);
+    p_.setPen(pen_);
+    p_.setBrush(brush_);
+    p_.setCompositionMode(QPainter::CompositionMode_Source);
+
+//    if (!p_.isActive()) {
+//        overlay_.fill(Qt::transparent);
+//        p_.begin(&overlay_);
+//        p_.setPen(pen_);
+//        p_.setBrush(brush_);
+//        p_.setCompositionMode(QPainter::CompositionMode_Source);
+//    }
 
     Q_ASSERT(overlay_.paintingActive());
 }

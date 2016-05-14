@@ -14,18 +14,28 @@ public:
     explicit Capture(QObject *parent = 0);
 
 signals:
-    void started();
     void matReady(const cv::Mat &frame);
+
+    void durationChanged(int n_frames);
+    void positionChanged(int frame);
+    void playbackSpeedChanged(int fps);
 
 public slots:
     void startImage(const QString &file);
     void startVideo(const QString &file);
     void startCamera(int cam = 0);
+
     void stop();
+    void changeStatePlaying();
+    void changeVideoPos(int to_frame);
+    void changePlaybackSpeed(int fps);
+    void setDefaultPlaybackSpeed();
 
 private:
     QScopedPointer<cv::VideoCapture> vcapture_;
     QBasicTimer timer_;
+
+    int frame_delay_ms_;
 
     void timerEvent(QTimerEvent *ev);
 
