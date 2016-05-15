@@ -5,7 +5,6 @@
 
 #include <opencv/cv.hpp>
 
-#include <QTextEdit>
 #include <QImage>
 #include <QPixmap>
 #include <QVector>
@@ -20,8 +19,8 @@
 class DrawingOutput : public AbstractOutput
 {
 public:
-    DrawingOutput(QTextEdit *text_box, QObject *parent = nullptr);
-    DrawingOutput(QTextEdit *text_box, QPen pen, QBrush brush, QObject *parent = nullptr);
+    explicit DrawingOutput(QObject *parent = nullptr);
+    DrawingOutput(QPen pen, QBrush brush, QObject *parent = nullptr);
 
     void output(const std::vector<std::pair<int, float> > &predictions) override;
     void output(const std::vector<cv::Rect> &boxes) override;
@@ -33,7 +32,6 @@ public:
     void updateOutputSize(cv::Size overlay_size) override;
 
 private:
-    QTextEdit *text_box_; //no ownership
     QPixmap overlay_;
     cv::Size overlay_size_;
     QVector<QRectF> boxes_;

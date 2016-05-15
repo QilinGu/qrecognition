@@ -4,6 +4,7 @@
 #include <string>
 
 #include <QObject>
+#include <QString>
 
 #include <opencv/cv.hpp>
 
@@ -50,7 +51,8 @@ public:
     virtual void updateOutputSize(cv::Size overlay_size) = 0;
 
 signals:
-    void outputReady(const QPixmap &overlay);
+    void overlayReady(const QPixmap &overlay);
+    void outputReady(const QString &output);
 
 protected:
     std::vector<std::string> labels_;

@@ -34,7 +34,7 @@ MainWindow::MainWindow(QWidget *parent)
     qRegisterMetaType<cv::Mat>();
     ui->setupUi(this);
 
-    output_ = new DrawingOutput(ui->textEdit);
+    output_ = new DrawingOutput();
     proc_ = new Processor(output_);
     viewer_ = new LabelViewer(ui->label);
     converter_->setProcessAll(false);
@@ -90,7 +90,8 @@ MainWindow::MainWindow(QWidget *parent)
     connect(capture_, &Capture::matReady, proc_, &Processor::receiveFrame, Qt::QueuedConnection);
     connect(capture_, &Capture::matReady, converter_, &Converter::processFrame, Qt::QueuedConnection);
     connect(converter_, &Converter::imageReady, viewer_, &AbstractViewer::displayImage, Qt::QueuedConnection);
-    connect(output_, &AbstractOutput::outputReady, viewer_, &AbstractViewer::setOverlay, Qt::QueuedConnection);
+    connect(output_, &AbstractOutput::overlayReady, viewer_, &AbstractViewer::setOverlay, Qt::QueuedConnection);
+    connect(output_, &AbstractOutput::outputReady, ui->textEdit, &QTextEdit::append, Qt::QueuedConnection);
 
     initSupportedFormats();
 }

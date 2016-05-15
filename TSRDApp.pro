@@ -50,15 +50,6 @@ HEADERS  += mainwindow.h \
 FORMS    += mainwindow.ui \
     opennetdialog.ui
 
-# py-faster-rcnn Caffe fork
-#win32:CONFIG(release, debug|release): LIBS += -L$$PWD/../../../builds/py-faster-rcnn/caffe-fast-rcnn/build/lib/release/ -lcaffe
-#else:win32:CONFIG(debug, debug|release): LIBS += -L$$PWD/../../../builds/py-faster-rcnn/caffe-fast-rcnn/build/lib/debug/ -lcaffe
-#else:unix: LIBS += -L$$PWD/../../../builds/py-faster-rcnn/caffe-fast-rcnn/build/lib/ -lcaffe
-
-#INCLUDEPATH += $$PWD/../../../builds/py-faster-rcnn/caffe-fast-rcnn/include
-#DEPENDPATH += $$PWD/../../../builds/py-faster-rcnn/caffe-fast-rcnn/include
-
-# Caffe from aur
 win32:CONFIG(release, debug|release): LIBS += -L/usr/lib/release/ -lcaffe
 else:win32:CONFIG(debug, debug|release): LIBS += -L/usr/lib/debug/ -lcaffe
 else:unix: LIBS += -L/usr/lib/ -lcaffe
@@ -99,8 +90,3 @@ else:unix: LIBS += -L$$PWD/../../../../usr/lib/ -lopencv_videoio
 
 INCLUDEPATH += /usr/include
 DEPENDPATH += /usr/include
-
-
-win32:CONFIG(release, debug|release): LIBS += -L$$PWD/../../../../../usr/lib/release/ -lopencv_xobjdetect
-else:win32:CONFIG(debug, debug|release): LIBS += -L$$PWD/../../../../../usr/lib/debug/ -lopencv_xobjdetect
-else:unix: LIBS += -L$$PWD/../../../../../usr/lib/ -lopencv_xobjdetect

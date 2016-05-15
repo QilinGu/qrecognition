@@ -7,42 +7,39 @@
 
 using namespace std;
 
-DrawingOutput::DrawingOutput(QTextEdit *text_box, QObject *parent)
+DrawingOutput::DrawingOutput(QObject *parent)
     : AbstractOutput(parent)
-    , text_box_(text_box)
     , pen_(Qt::red, 2)
 {
     pen_.setStyle(Qt::SolidLine);
 }
 
-DrawingOutput::DrawingOutput(QTextEdit *text_box, QPen pen, QBrush brush, QObject *parent)
+DrawingOutput::DrawingOutput(QPen pen, QBrush brush, QObject *parent)
     : AbstractOutput(parent)
-    , text_box_(text_box)
     , pen_(pen)
     , brush_(brush)
 {
 }
 
 void DrawingOutput::output(const std::vector<std::pair<int, float> > &predictions) {
+    QString s;
     if (!is_labels_) {
         for (auto pred : predictions) {
-            string s("class: ");
+            s.append("class: ");
             s.append(to_string(pred.first).c_str());
-            s.append(", probability: ");
-            s.append(to_string(pred.second).c_str());
-            text_box_->append(s.c_str());
+            s.append(", prob.: ");
+            s.append(QString::number(pred.second, 'f', 3));
+            s.append("\n");
         }
-        text_box_->append("");
     } else {
         for (auto pred : predictions) {
-            string s("label: ");
-            s.append(labels_[pred.first]);
-            s.append(", probability: ");
-            s.append(to_string(pred.second).c_str());
-            text_box_->append(s.c_str());
+            s.append(QString::number(pred.second, 'f', 3));
+            s.append(" : ");
+            s.append( labels_[pred.first].c_str() );
+            s.append("\n");
         }
-        text_box_->append("");
     }
+    emit outputReady(s);
 }
 
 void DrawingOutput::output(const std::vector<cv::Rect> &boxes) {
@@ -75,7 +72,7 @@ void DrawingOutput::update() {
         p_.fillRect(overlay_.rect(), Qt::transparent);
         p_.drawRects(boxes_);
 
-        emit outputReady(overlay_);
+        emit overlayReady(overlay_);
     }
 }
 
