@@ -4,8 +4,6 @@
 #include <QThread>
 #include <QString>
 
-#include <QGraphicsScene>
-
 #include "abstractoutput.h"
 #include "abstractviewer.h"
 #include "processor.h"
@@ -37,23 +35,23 @@ private slots:
     void resizeEvent(QResizeEvent *event) override;
 
 private:
-    void reset();
+    QThread thread1_;
+    QThread thread2_;
+    QThread thread3_;
+    QThread thread4_;
 
-    QThread thread1;
-    QThread thread2;
-    QThread thread3;
-    QThread thread4;
-
-    Capture *capture;
-    Converter *converter;
-    AbstractViewer *viewer;
-    AbstractOutput *output;
-    Processor *proc;
-
-    Ui::MainWindow *ui;
+    Capture *capture_; // ownership
+    Converter *converter_; // ownership
+    AbstractViewer *viewer_; // ownership
+    AbstractOutput *output_; // ownership
+    Processor *proc_; // ownership
 
     std::vector<std::string> supported_img_formats_;
     std::vector<std::string> supported_video_formats_;
+
+    Ui::MainWindow *ui;
+
+    void reset();
 
     void initSupportedFormats();
     QString formatsToPatterns(const std::vector<std::string> &formats);

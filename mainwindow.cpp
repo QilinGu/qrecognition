@@ -20,57 +20,57 @@ using namespace std;
 
 MainWindow::MainWindow(QWidget *parent)
     : QMainWindow(parent)
-    , thread1()
-    , thread2()
-    , thread3()
-    , thread4()
-    , capture(new Capture())
-    , converter(new Converter())
-    , viewer(nullptr)
-    , output(nullptr)
-    , proc(nullptr)
+    , thread1_()
+    , thread2_()
+    , thread3_()
+    , thread4_()
+    , capture_(new Capture())
+    , converter_(new Converter())
+    , viewer_(nullptr)
+    , output_(nullptr)
+    , proc_(nullptr)
     , ui(new Ui::MainWindow)
 {
     qRegisterMetaType<cv::Mat>();
     ui->setupUi(this);
 
-    output = new DrawingOutput(ui->textEdit);
-    proc = new Processor(output);
-    viewer = new LabelViewer(ui->label);
-    converter->setProcessAll(false);
+    output_ = new DrawingOutput(ui->textEdit);
+    proc_ = new Processor(output_);
+    viewer_ = new LabelViewer(ui->label);
+    converter_->setProcessAll(false);
 
-    connect(ui->pushButtonOpenVideo, &QPushButton::clicked, this, &MainWindow::setVideo);
-    connect(ui->pushButtonOpenImage, &QPushButton::clicked, this, &MainWindow::setImage);
-    connect(ui->pushButtonCamera, &QPushButton::clicked, this, &MainWindow::setCamera);
+    connect(ui->pushButtonOpenVideo, &QPushButton::clicked, this, &MainWindow::openVideo);
+    connect(ui->pushButtonOpenImage, &QPushButton::clicked, this, &MainWindow::openImage);
+    connect(ui->pushButtonCamera, &QPushButton::clicked, this, &MainWindow::openCamera);
     ui->pushButtonCamera->setEnabled( QCameraInfo::availableCameras().count() > 0 );
 
-    connect(ui->pushButtonPlay, &QPushButton::clicked, capture, &Capture::changeStatePlaying);
-    connect(ui->sliderSeek, &QSlider::sliderMoved, capture, &Capture::changeVideoPos);
-    connect(ui->sliderSpeed, &QSlider::sliderMoved, capture, &Capture::changePlaybackSpeed);
-    connect(ui->pushButtonSetDefSpeed, &QPushButton::clicked, capture, &Capture::setDefaultPlaybackSpeed);
-    connect(capture, &Capture::positionChanged, this, &MainWindow::positionChanged);
-    connect(capture, &Capture::durationChanged, this, &MainWindow::durationChanged);
-    connect(capture, &Capture::playbackSpeedChanged, this, &MainWindow::playbackSpeedChanged);
+    connect(ui->pushButtonPlay, &QPushButton::clicked, capture_, &Capture::changeStatePlaying, Qt::QueuedConnection);
+    connect(ui->sliderSeek, &QSlider::sliderMoved, capture_, &Capture::changeVideoPos, Qt::QueuedConnection);
+    connect(ui->sliderSpeed, &QSlider::sliderMoved, capture_, &Capture::changePlaybackSpeed, Qt::QueuedConnection);
+    connect(ui->pushButtonSetDefSpeed, &QPushButton::clicked, capture_, &Capture::setDefaultPlaybackSpeed, Qt::QueuedConnection);
+    connect(capture_, &Capture::positionChanged, this, &MainWindow::positionChanged);
+    connect(capture_, &Capture::durationChanged, this, &MainWindow::durationChanged);
+    connect(capture_, &Capture::playbackSpeedChanged, this, &MainWindow::playbackSpeedChanged);
     ui->pushButtonPlay->setEnabled(false);
     ui->pushButtonSetDefSpeed->setEnabled(false);
     ui->sliderSpeed->setRange(1, 121);
     ui->sliderSpeed->setEnabled(false);
     ui->sliderSeek->setEnabled(false);
 
-    connect(ui->pushButtonOpenClassifier, &QPushButton::clicked, proc, &Processor::initClassifier);
-    connect(ui->pushButtonOpenDetector, &QPushButton::clicked, proc, &Processor::initDetector);
-    connect(ui->pushButtonStartCl, &QPushButton::clicked, proc, &Processor::changeStateProcessing);
+    connect(ui->pushButtonOpenClassifier, &QPushButton::clicked, proc_, &Processor::initClassifier);
+    connect(ui->pushButtonOpenDetector, &QPushButton::clicked, proc_, &Processor::initDetector);
+    connect(ui->pushButtonStartCl, &QPushButton::clicked, proc_, &Processor::changeStateProcessing);
 //    connect(ui->pushButtonOpenLabels, &QPushButton::clicked, proc, &Processor::openLabels);
-    connect(ui->pushButtonOpenLabels, &QPushButton::clicked, [this](){proc->openLabels(this);});
+    connect(ui->pushButtonOpenLabels, &QPushButton::clicked, [this](){proc_->openLabels(this);});
     QString statusOn("Loaded");
     QString statusOff("Not Loaded");
-    connect(proc, &Processor::classifierOpened, [this, statusOn, statusOff](bool checked) {
+    connect(proc_, &Processor::classifierOpened, [this, statusOn, statusOff](bool checked) {
         checked ? ui->lineEditClassifierStatus->setText(statusOn) : ui->lineEditClassifierStatus->setText(statusOff);
     });
-    connect(proc, &Processor::detectorOpened, [this, statusOn, statusOff](bool checked) {
+    connect(proc_, &Processor::detectorOpened, [this, statusOn, statusOff](bool checked) {
         checked ? ui->lineEditDetectorStatus->setText(statusOn) : ui->lineEditDetectorStatus->setText(statusOff);
     });
-    connect(proc, &Processor::labelsOpened, [this, statusOn, statusOff](bool checked) {
+    connect(proc_, &Processor::labelsOpened, [this, statusOn, statusOff](bool checked) {
         checked ? ui->lineEditLabelsStatus->setText(statusOn) : ui->lineEditLabelsStatus->setText(statusOff);
     });
 
@@ -78,19 +78,19 @@ MainWindow::MainWindow(QWidget *parent)
 //    TODO: remove then: not implemented yet
     ui->pushButtonOpenDetector->setEnabled(false);
 
-    capture->moveToThread(&thread1);
-    proc->moveToThread(&thread2);
-    converter->moveToThread(&thread3);
-    viewer->moveToThread(&thread4);
-    thread1.start();
-    thread2.start();
-    thread3.start();
-    thread4.start();
+    capture_->moveToThread(&thread1_);
+    proc_->moveToThread(&thread2_);
+    converter_->moveToThread(&thread3_);
+    viewer_->moveToThread(&thread4_);
+    thread1_.start();
+    thread2_.start();
+    thread3_.start();
+    thread4_.start();
 
-    connect(capture, &Capture::matReady, proc, &Processor::receiveFrame, Qt::QueuedConnection);
-    connect(capture, &Capture::matReady, converter, &Converter::processFrame, Qt::QueuedConnection);
-    connect(converter, &Converter::imageReady, viewer, &AbstractViewer::displayImage, Qt::QueuedConnection);
-    connect(output, &AbstractOutput::outputReady, viewer, &AbstractViewer::setOverlay, Qt::QueuedConnection);
+    connect(capture_, &Capture::matReady, proc_, &Processor::receiveFrame, Qt::QueuedConnection);
+    connect(capture_, &Capture::matReady, converter_, &Converter::processFrame, Qt::QueuedConnection);
+    connect(converter_, &Converter::imageReady, viewer_, &AbstractViewer::displayImage, Qt::QueuedConnection);
+    connect(output_, &AbstractOutput::outputReady, viewer_, &AbstractViewer::setOverlay, Qt::QueuedConnection);
 
     initSupportedFormats();
 }
@@ -139,28 +139,35 @@ QString MainWindow::formatsToPatterns(const std::vector<string> &formats) {
 
 MainWindow::~MainWindow()
 {
-    thread1.quit();
-    thread2.quit();
-    thread3.quit();
-    thread4.quit();
-    thread1.wait();
-    thread2.wait();
-    thread3.wait();
-    thread4.wait();
+    thread1_.quit();
+    thread2_.quit();
+    thread3_.quit();
+    thread4_.quit();
+    thread1_.wait();
+    thread2_.wait();
+    thread3_.wait();
+    thread4_.wait();
+
+    delete capture_;
+    delete converter_;
+    delete proc_;
+    delete output_;
+    delete viewer_;
+
     delete ui;
 }
 
 void MainWindow::resizeEvent(QResizeEvent *event) {
-    viewer->resizeEvent(event);
+    viewer_->resizeEvent(event);
 }
 
-void MainWindow::setVideo() {
+void MainWindow::openVideo() {
     QString filename = QFileDialog::getOpenFileName( this, "Open Video",
         QDir::homePath(), "Video Files " + formatsToPatterns(supported_video_formats_) );
 
     if (!filename.isEmpty()) {
         reset();
-        QMetaObject::invokeMethod(capture, "startVideo", Q_ARG(QString, filename));
+        QMetaObject::invokeMethod(capture_, "startVideo", Q_ARG(QString, filename));
         ui->pushButtonPlay->setEnabled(true);
         ui->pushButtonSetDefSpeed->setEnabled(true);
         ui->sliderSeek->setEnabled(true);
@@ -168,33 +175,33 @@ void MainWindow::setVideo() {
     }
 }
 
-void MainWindow::setCamera() {
+void MainWindow::openCamera() {
     reset();
     auto cameras = QCameraInfo::availableCameras();
     if (cameras.count() == 1) {
-        QMetaObject::invokeMethod(capture, "startCamera");
+        QMetaObject::invokeMethod(capture_, "startCamera");
     } else {
 //      TODO: dialog to choose camera
-        QMetaObject::invokeMethod(capture, "startCamera");
+        QMetaObject::invokeMethod(capture_, "startCamera");
     }
 }
 
-void MainWindow::setImage() {
+void MainWindow::openImage() {
     QString filename = QFileDialog::getOpenFileName( this, "Open Image",
         QDir::homePath(), "Image Files " + formatsToPatterns(supported_img_formats_) );
 
     if (!filename.isEmpty()) {
         reset();
-        proc->setOneshot(true);
-        proc->setProcessing(true);
-        QMetaObject::invokeMethod(capture, "startImage", Q_ARG(QString, filename));
+        proc_->setOneshot(true);
+        proc_->setProcessing(true);
+        QMetaObject::invokeMethod(capture_, "startImage", Q_ARG(QString, filename));
     }
 }
 
 void MainWindow::reset() {
-    QMetaObject::invokeMethod(capture, "stop");
-    proc->setProcessing(false);
-    proc->setOneshot(false);
+    QMetaObject::invokeMethod(capture_, "stop");
+    proc_->setProcessing(false);
+    proc_->setOneshot(false);
     ui->pushButtonPlay->setEnabled(false);
     ui->pushButtonSetDefSpeed->setEnabled(false);
     ui->sliderSeek->setEnabled(false);

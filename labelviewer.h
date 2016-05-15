@@ -17,8 +17,8 @@ public:
     void resizeEvent(QResizeEvent *event = nullptr) override;
 
 private:
-    QLabel *bg_display_;
-    QLabel *fg_display_;
+    QLabel *bg_display_; // no ownership
+    QLabel *fg_display_; // no ownership (bg_display is parent)
     QPixmap image_;
     QPixmap overlay_;
 };

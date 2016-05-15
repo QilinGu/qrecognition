@@ -56,11 +56,11 @@ public slots:
     void openLabels(QWidget *dialogParent);
 
 private:
-    AbstractClassifierBuilder *builder_cl_;
-    AbstractDetectorBuilder *builder_dt_;
-    AbstractClassifier *cl_;
-    AbstractDetector *dt_;
-    AbstractOutput *out_;
+    AbstractClassifierBuilder *builder_cl_; // ownership
+    AbstractDetectorBuilder *builder_dt_; // ownership
+    AbstractClassifier *cl_; // ownership
+    AbstractDetector *dt_; // ownership
+    AbstractOutput *out_; // no ownership
 
     bool is_ready_;
     bool is_processing_;

@@ -18,6 +18,9 @@ public:
     ~OpenNetDialog();
 
     std::vector<QString> filePaths();
+
+    /* Get the status of choosed files - if they are sufficient to try load a network.
+     * @return status. */
     bool isFilesChoosed();
 
 private slots:

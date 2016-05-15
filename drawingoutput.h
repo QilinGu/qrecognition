@@ -33,7 +33,7 @@ public:
     void updateOutputSize(cv::Size overlay_size) override;
 
 private:
-    QTextEdit *text_box_;
+    QTextEdit *text_box_; //no ownership
     QPixmap overlay_;
     cv::Size overlay_size_;
     QVector<QRectF> boxes_;
