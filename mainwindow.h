@@ -2,6 +2,7 @@
 
 #include <QMainWindow>
 #include <QThread>
+#include <QString>
 
 #include <QGraphicsScene>
 
@@ -54,6 +55,13 @@ private:
     AbstractOutput *output;
     Processor *proc;
 
+
     OpenNetDialog *net_dialog;
     Ui::MainWindow *ui;
+
+    std::vector<std::string> supported_img_formats_;
+    std::vector<std::string> supported_video_formats_;
+
+    void initSupportedFormats();
+    QString formatsToPatterns(const std::vector<std::string> &formats);
 };

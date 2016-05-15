@@ -47,7 +47,7 @@ private:
     /*dbg*/int i = 0;
 
     void process(const cv::Mat &img);
-    std::vector<cv::Mat> cropImages(const std::vector<cv::Rect> &boxes);
+    const std::vector<cv::Mat> cropImages(const cv::Mat &img, const std::vector<cv::Rect> &boxes);
 
     /* TODO: this method is just for scratch */
     void loadLabels(const std::string &labels_file);

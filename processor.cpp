@@ -1,6 +1,5 @@
 #include "processor.h"
 
-#include <iostream>
 #include <chrono>
 
 #include <QDebug>
@@ -130,7 +129,7 @@ void Processor::process(const cv::Mat &img) {
     vector<cv::Rect> boxes;
     if (dt_) {
         boxes = dt_->detect(img);
-        detected = cropImages(boxes);
+        detected = cropImages(img, boxes);
     } else {
         detected.push_back(img);
     }
@@ -141,13 +140,12 @@ void Processor::process(const cv::Mat &img) {
        classified = cl_->classify(detected, 5);
     }
 
-    // Prepare output.
-    cv::Size s(img.cols, img.rows);
+    //TODO: remove then: testing output
     ++i;
     boxes.push_back(cv::Rect(i, i, i, i));
     out_->setOutput(boxes);
-    out_->update(s);
 
+    // Setting appropriate output.
     if (dt_) {
         if (cl_) {
             out_->setOutput(boxes, classified);
@@ -158,16 +156,21 @@ void Processor::process(const cv::Mat &img) {
         if (cl_) {
             out_->setOutput(classified[0]);
         } else {
-            //TODO: case for output when there is no both cl and dt
-//            qDebug() << "Processor: either classifier or detecor were not specified - nothing to do.";
+//            TODO: case for output when there is no both cl and dt
+            qDebug() << "Processor: either classifier or detecor were not specified - nothing to do.";
         }
-
     }
+    // Actually output stuff.
+    cv::Size s(img.cols, img.rows);
+    out_->update(s);
 }
 
-// TODO: cropImages()
-vector<cv::Mat> Processor::cropImages(const std::vector<cv::Rect> &boxes) {
-    Q_UNUSED(boxes)
+const vector<cv::Mat> Processor::cropImages(const cv::Mat &img, const std::vector<cv::Rect> &boxes) {
+    vector<cv::Mat> cropped_imgs;
+
+    for (cv::Rect box : boxes) {
+        cropped_imgs.push_back( cv::Mat(img, box) );
+    }
 
     return vector<cv::Mat>();
 }

@@ -24,12 +24,14 @@ private slots:
     void openModelClicked();
     void openWeightsClicked();
     void openMeanImageClicked();
-    void openLabelsClicked();
 
 private:
     Ui::openNetDialog *ui;
-    bool isModelOpened;
-    bool isWeightsOpened;
+    bool isModelOpened_;
+    bool isWeightsOpened_;
 
     std::vector<QString> filePaths_;
+
+    bool changeDir(const QString &path);
+    QString getFilename(const QString &filepath);
 };

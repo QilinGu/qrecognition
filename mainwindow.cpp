@@ -41,7 +41,6 @@ MainWindow::MainWindow(QWidget *parent)
     converter->setProcessAll(false);
 
     ui->pushButtonPlay->setEnabled(false);
-//    ui->pushButtonPlay->setIcon(style()->standardIcon(QStyle::SP_MediaPlay));
     ui->sliderSeek->setRange(0, 0);
 
     connect(ui->pushButtonOpenClassifier, &QPushButton::clicked, proc, &Processor::initClassifier);
@@ -57,7 +56,6 @@ MainWindow::MainWindow(QWidget *parent)
     connect(ui->sliderSeek, &QSlider::sliderMoved, capture, &Capture::changeVideoPos);
     connect(ui->sliderSpeed, &QSlider::sliderMoved, capture, &Capture::changePlaybackSpeed);
     connect(ui->pushButtonSetDefSpeed, &QPushButton::clicked, capture, &Capture::setDefaultPlaybackSpeed);
-//    connect(player, &QMediaPlayer::stateChanged, this, &MainWindow::mediaStateChanged);
     connect(capture, &Capture::positionChanged, this, &MainWindow::positionChanged);
     connect(capture, &Capture::durationChanged, this, &MainWindow::durationChanged);
     connect(capture, &Capture::playbackSpeedChanged, this, &MainWindow::playbackSpeedChanged);
@@ -66,13 +64,12 @@ MainWindow::MainWindow(QWidget *parent)
     ui->sliderSpeed->setEnabled(false);
     ui->sliderSeek->setEnabled(false);
 
-//    TODO: remove then
     qDebug() << "main thread " << QThread::currentThreadId();
-    ui->pushButtonOpenDetector->setEnabled(false); // ...as this is not implemented yet
+//    TODO: remove then: not implemented yet
+    ui->pushButtonOpenDetector->setEnabled(false);
 
     capture->moveToThread(&thread1);
     proc->moveToThread(&thread2);
-//    output->moveToThread(&thread2);
     converter->moveToThread(&thread3);
     viewer->moveToThread(&thread4);
     thread1.start();
@@ -84,6 +81,51 @@ MainWindow::MainWindow(QWidget *parent)
     connect(capture, &Capture::matReady, converter, &Converter::processFrame, Qt::QueuedConnection);
     connect(converter, &Converter::imageReady, viewer, &AbstractViewer::displayImage, Qt::QueuedConnection);
     connect(output, &AbstractOutput::outputReady, viewer, &AbstractViewer::setOverlay, Qt::QueuedConnection);
+
+    initSupportedFormats();
+}
+
+void MainWindow::initSupportedFormats() {
+    // Always supported
+    supported_img_formats_.push_back("bmp");
+    supported_img_formats_.push_back("dib");
+    supported_img_formats_.push_back("pbm");
+    supported_img_formats_.push_back("pgm");
+    supported_img_formats_.push_back("ppm");
+    supported_img_formats_.push_back("sr");
+    supported_img_formats_.push_back("ras");
+
+    // Depends on codecs presence
+    supported_img_formats_.push_back("jpeg");
+    supported_img_formats_.push_back("jpg");
+    supported_img_formats_.push_back("jp2");
+    supported_img_formats_.push_back("png");
+    supported_img_formats_.push_back("webp");
+    supported_img_formats_.push_back("tif");
+    supported_img_formats_.push_back("tiff");
+
+    // Not checked
+    supported_video_formats_.push_back("mkv");
+    supported_video_formats_.push_back("avi");
+    supported_video_formats_.push_back("mp4");
+    supported_video_formats_.push_back("flv");
+    supported_video_formats_.push_back("wmv");
+    supported_video_formats_.push_back("mpg");
+    supported_video_formats_.push_back("mpeg");
+    supported_video_formats_.push_back("m4v");
+    supported_video_formats_.push_back("3gp");
+
+}
+
+QString MainWindow::formatsToPatterns(const std::vector<string> &formats) {
+    QString patterns("(");
+    for (string s : formats) {
+        patterns.append("*.");
+        patterns.append(s.c_str());
+        patterns.append(" ");
+    }
+    patterns.append( ")" );
+    return patterns;
 }
 
 MainWindow::~MainWindow()
@@ -113,9 +155,8 @@ void MainWindow::resizeEvent(QResizeEvent *event) {
 }
 
 void MainWindow::setVideo() {
-//    TODO: what video types opencv supports?
-    QString filename = QFileDialog::getOpenFileName(this,
-        tr("Open Video"), QDir::homePath(), tr("Video Files (*)"));
+    QString filename = QFileDialog::getOpenFileName( this, "Open Video",
+        QDir::homePath(), "Video Files " + formatsToPatterns(supported_video_formats_) );
 
     if (!filename.isEmpty()) {
         reset();
@@ -128,7 +169,6 @@ void MainWindow::setVideo() {
 }
 
 void MainWindow::setCamera() {
-    // It is supposed that this method invoked only when there exist cameras.
     reset();
     auto cameras = QCameraInfo::availableCameras();
     if (cameras.count() == 1) {
@@ -140,9 +180,8 @@ void MainWindow::setCamera() {
 }
 
 void MainWindow::setImage() {
-//    TODO: what image types opencv supports?
-    QString filename = QFileDialog::getOpenFileName(this,
-        tr("Open Image"), QDir::homePath(), tr("Image Files (*)"));
+    QString filename = QFileDialog::getOpenFileName( this, "Open Image",
+        QDir::homePath(), "Image Files " + formatsToPatterns(supported_img_formats_) );
 
     if (!filename.isEmpty()) {
         reset();
@@ -161,18 +200,6 @@ void MainWindow::reset() {
     ui->sliderSeek->setEnabled(false);
     ui->sliderSpeed->setEnabled(false);
 }
-
-//void MainWindow::mediaStateChanged(QMediaPlayer::State state)
-//{
-//    switch(state) {
-//    case QMediaPlayer::PlayingState:
-//        ui->pushButtonPlay->setIcon(style()->standardIcon(QStyle::SP_MediaPause));
-//        break;
-//    default:
-//        ui->pushButtonPlay->setIcon(style()->standardIcon(QStyle::SP_MediaPlay));
-//        break;
-//    }
-//}
 
 void MainWindow::positionChanged(qint64 position) {
     ui->sliderSeek->setValue(position);

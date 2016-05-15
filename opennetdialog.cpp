@@ -8,8 +8,8 @@ using namespace std;
 OpenNetDialog::OpenNetDialog(QWidget *parent)
     : QDialog(parent)
     , ui(new Ui::openNetDialog)
-    , isModelOpened(false)
-    , isWeightsOpened(false)
+    , isModelOpened_(false)
+    , isWeightsOpened_(false)
     , filePaths_()
 {
     ui->setupUi(this);
@@ -17,9 +17,9 @@ OpenNetDialog::OpenNetDialog(QWidget *parent)
     connect(ui->pushButtonOpenModel, &QPushButton::clicked, this, &OpenNetDialog::openModelClicked);
     connect(ui->pushButtonOpenWeights, &QPushButton::clicked, this, &OpenNetDialog::openWeightsClicked);
     connect(ui->pushButtonOpenMeanImage, &QPushButton::clicked, this, &OpenNetDialog::openMeanImageClicked);
-    connect(ui->pushButtonOpenLabels, &QPushButton::clicked, this, &OpenNetDialog::openLabelsClicked);
 
     filePaths_.resize(4);
+    QDir::setCurrent(QDir::homePath());
 }
 
 OpenNetDialog::~OpenNetDialog()
@@ -27,8 +27,25 @@ OpenNetDialog::~OpenNetDialog()
     delete ui;
 }
 
+bool OpenNetDialog::changeDir(const QString &path) {
+    if (!path.isNull()) {
+        QString dir_path = path.left( path.lastIndexOf('/') + 1 );
+        QDir dir(dir_path);
+        if (dir.isReadable()) {
+            QDir::setCurrent(dir.absolutePath());
+            return true;
+        }
+    }
+    return false;
+}
+
+QString OpenNetDialog::getFilename(const QString &filepath) {
+    int name_length = filepath.length() - filepath.lastIndexOf('/') - 1;
+    return filepath.right( name_length );
+}
+
 bool OpenNetDialog::isFilesChoosed() {
-    return isModelOpened && isWeightsOpened;
+    return isModelOpened_ && isWeightsOpened_;
 }
 
 vector<QString> OpenNetDialog::filePaths() {
@@ -37,45 +54,48 @@ vector<QString> OpenNetDialog::filePaths() {
 
 void OpenNetDialog::openModelClicked()
 {
-    QString filename = QFileDialog::getOpenFileName(this,
-        tr("Open Model"), QDir::homePath(), tr("(*.prototxt)"));
+    QString filepath = QFileDialog::getOpenFileName(this,
+        "Open Model", QDir::currentPath(), "(*.prototxt)");
 
-    if (!filename.isEmpty()) {
-        filePaths_[0] = filename;
-        isModelOpened = true;
+    if ( changeDir(filepath) ) {
+        ui->lineEditModelFile->setText( getFilename(filepath) );
+
+        filePaths_[0] = filepath;
+        isModelOpened_ = true;
+    } else {
+        ui->lineEditModelFile->setText("Necessary");
+        isModelOpened_ = false;
     }
 }
 
 void OpenNetDialog::openWeightsClicked()
 {
+    QString filepath = QFileDialog::getOpenFileName(this,
+        "Open Trained Net", QDir::currentPath(), "(*.caffemodel)");
 
-    QString filename = QFileDialog::getOpenFileName(this,
-        tr("Open Trained Net"), QDir::homePath(), tr("(*.caffemodel)"));
+    if ( changeDir(filepath) ) {
+        ui->lineEditWeightsFile->setText( getFilename(filepath) );
 
-    if (!filename.isEmpty()) {
-        filePaths_[1] = filename;
-        isWeightsOpened = true;
+        filePaths_[1] = filepath;
+        isWeightsOpened_ = true;
+    } else {
+        ui->lineEditWeightsFile->setText("Necessary");
+        isWeightsOpened_ = false;
     }
 }
 
 void OpenNetDialog::openMeanImageClicked()
 {
 
-    QString filename = QFileDialog::getOpenFileName(this,
-        tr("Open Mean Image File"), QDir::homePath(), tr("(*.binaryproto)"));
+    QString filepath = QFileDialog::getOpenFileName(this,
+        "Open Mean Image File", QDir::currentPath(), "(*.binaryproto)");
 
-    if (!filename.isEmpty()) {
-        filePaths_[2] = filename;
-    }
-}
+    if (!filepath.isEmpty()) {
+        changeDir(filepath);
+        ui->lineEditMeanFile->setText( getFilename(filepath) );
 
-void OpenNetDialog::openLabelsClicked()
-{
-
-    QString filename = QFileDialog::getOpenFileName(this,
-        tr("Open Labels File"), QDir::homePath(), tr("(*.txt)"));
-
-    if (!filename.isEmpty()) {
-        filePaths_[3] = filename;
+        filePaths_[2] = filepath;
+    } else {
+        ui->lineEditMeanFile->setText("Recommended");
     }
 }
