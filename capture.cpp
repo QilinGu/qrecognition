@@ -55,6 +55,12 @@ void Capture::timerEvent(QTimerEvent *ev) {
     //TODO: remove then
     if (frame.empty()) qDebug() << "cv::Mat in Capture is null!";
 
+//        string file = "/home/gkirg/projects/compvis/analyze/own_data/00001.ppm";
+//        cv::Mat direct = cv::imread(file);
+//        auto diff = (frame != direct);
+//        auto n_diff = cv::countNonZero(diff);
+//        qDebug() << "diff between captured frame and orig direct:" << n_diff;
+
     emit matReady(frame);
     emit positionChanged( vcapture_->get(cv::CAP_PROP_POS_FRAMES) );
 }

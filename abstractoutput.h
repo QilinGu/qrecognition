@@ -19,13 +19,13 @@ public:
     virtual bool loadLabels(const std::string &labels_file, int num_labels);
     virtual void loadLabels(const std::vector<std::string> &labels);
 
-    virtual void setOutput(const std::vector<std::pair<int, float> > &predictions) = 0;
-    virtual void setOutput(const std::vector<cv::Rect> &boxes) = 0;
-    virtual void setOutput(const std::vector<cv::Rect> &boxes,
+    virtual void output(const std::vector<std::pair<int, float> > &predictions) = 0;
+    virtual void output(const std::vector<cv::Rect> &boxes) = 0;
+    virtual void output(const std::vector<cv::Rect> &boxes,
                         const std::vector<std::vector<std::pair<int, float> > > &predictions) = 0;
 
     virtual void update() = 0;
-    virtual void update(cv::Size orig_img_size) = 0;
+    virtual void updateOutputSize(cv::Size overlay_size) = 0;
 
 signals:
     void outputReady(const QPixmap &pm);

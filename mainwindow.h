@@ -6,7 +6,6 @@
 
 #include <QGraphicsScene>
 
-#include "opennetdialog.h"
 #include "abstractoutput.h"
 #include "abstractviewer.h"
 #include "processor.h"
@@ -30,14 +29,12 @@ public slots:
     void setImage();
     void setCamera();
 
-//    void mediaStateChanged(QMediaPlayer::State state);
     void positionChanged(qint64 pos);
     void durationChanged(qint64 dur);
     void playbackSpeedChanged(qint64 fps);
 
 private slots:
     void resizeEvent(QResizeEvent *event) override;
-    bool eventFilter(QObject *obj, QEvent *ev) override;
 
 private:
     void reset();
@@ -47,16 +44,12 @@ private:
     QThread thread3;
     QThread thread4;
 
-    QGraphicsScene *scene;
-
     Capture *capture;
     Converter *converter;
     AbstractViewer *viewer;
     AbstractOutput *output;
     Processor *proc;
 
-
-    OpenNetDialog *net_dialog;
     Ui::MainWindow *ui;
 
     std::vector<std::string> supported_img_formats_;

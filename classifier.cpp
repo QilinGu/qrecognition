@@ -43,6 +43,10 @@ Classifier::Classifier(
     }
 }
 
+int Classifier::getNumOutputClasses() {
+    return net_->output_blobs()[0]->channels();
+}
+
 void Classifier::setMean(const string &mean_file) {
     BlobProto blob_proto;
     ReadProtoFromBinaryFileOrDie(mean_file.c_str(), &blob_proto);
@@ -75,7 +79,7 @@ void Classifier::setMean(const string &mean_file) {
 vector<vector<Prediction> > Classifier::classify(const vector<cv::Mat> &imgs, int topN) {
     auto output = predict(imgs);
     vector<vector<Prediction> > predictions;
-    //TODO: check output.size
+//    TODO: check output.size
 //    net_->output_blobs()[0]->channels();
     topN = min<int>(output[0].size(), topN);
 

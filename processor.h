@@ -21,6 +21,11 @@ public:
     Processor(AbstractOutput *output, QObject *parent = 0);
     ~Processor();
 
+signals:
+    void classifierOpened(bool opened);
+    void detectorOpened(bool opened);
+    void labelsOpened(bool opened);
+
 public slots:
     void receiveFrame(const cv::Mat &frame);
 
@@ -30,6 +35,7 @@ public slots:
 
     void initClassifier();
     void initDetector();
+    void openLabels(QWidget *dialogParent);
 
 private:
     AbstractClassifierBuilder *builder_cl_;
@@ -44,11 +50,9 @@ private:
 
     QReadWriteLock mutex_;
 
-    /*dbg*/int i = 0;
+    //TODO: remove then: for debug
+    int i = 0;
 
     void process(const cv::Mat &img);
     const std::vector<cv::Mat> cropImages(const cv::Mat &img, const std::vector<cv::Rect> &boxes);
-
-    /* TODO: this method is just for scratch */
-    void loadLabels(const std::string &labels_file);
 };

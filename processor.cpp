@@ -4,6 +4,8 @@
 
 #include <QDebug>
 #include <QImage>
+#include <QFileDialog>
+#include <QDir>
 
 #include "classifier.h"
 #include "caffenetbuilder.h"
@@ -38,34 +40,28 @@ Processor::~Processor() {
 }
 
 void Processor::initClassifier() {
-    //TODO: what to do with labels file?
     cl_ = builder_cl_->buildClassifier();
-    if (cl_) {
-        //TODO: do logic for handling when there is no classifier (or it is).
-    }
+    emit classifierOpened( (bool)cl_ );
 }
 
 void Processor::initDetector() {
     dt_ = builder_dt_->buildDetector();
-    if (dt_) {
-        //TODO: do logic for handling when there is no detector (or it is).
-    }
+    emit detectorOpened( (bool)dt_ );
 }
 
-void Processor::loadLabels(const string &labels_file) {
-    Q_UNUSED(labels_file)
-//    vector<string> labels;
+void Processor::openLabels(QWidget *dialogParent) {
+    if (cl_) {
+        // Need dialogParent because without him there is ugly SIGSEGV by gtk.
+        QString filename = QFileDialog::getOpenFileName( dialogParent,
+            "Open Labels File", QDir::homePath(), "Text Files (*.txt)");
 
-//    /* Load labels. */
-//    ifstream labels(labels_file.c_str());
-//    CHECK(labels) << "Unable to open labels file " << labels_file;
-//    string line;
-//    while (getline(labels, line))
-//        labels_.push_back(string(line));
-
-//    Blob<float>* output_layer = net_->output_blobs()[0];
-//    CHECK_EQ(labels_.size(), output_layer->channels())
-//        << "Number of labels is different from the output layer dimension.";
+        if (!filename.isEmpty()) {
+            bool res = out_->loadLabels( filename.toStdString(), cl_->getNumOutputClasses() );
+            emit labelsOpened(res);
+        }
+    } else {
+        qInfo() << "You should specify classifier first.";
+    }
 }
 
 void Processor::changeStateProcessing() {
@@ -101,8 +97,8 @@ void Processor::receiveFrame(const cv::Mat &frame) {
             auto now_ms = std::chrono::time_point_cast<std::chrono::milliseconds>(now);
 
 //            qDebug() << "Processor: frame size: " << frame.cols << " : " << frame.rows;
+            qDebug() << "received from capture";
             process(frame);
-//            sleep(1);
 
             auto now_end = std::chrono::high_resolution_clock::now();
             auto now_end_ms = std::chrono::time_point_cast<std::chrono::milliseconds>(now_end);
@@ -140,29 +136,28 @@ void Processor::process(const cv::Mat &img) {
        classified = cl_->classify(detected, 5);
     }
 
-    //TODO: remove then: testing output
-    ++i;
-    boxes.push_back(cv::Rect(i, i, i, i));
-    out_->setOutput(boxes);
-
     // Setting appropriate output.
+    cv::Size s(img.cols, img.rows);
+    out_->updateOutputSize(s);
     if (dt_) {
         if (cl_) {
-            out_->setOutput(boxes, classified);
+            out_->output(boxes, classified);
         } else {
-            out_->setOutput(boxes);
+            out_->output(boxes);
         }
     } else {
         if (cl_) {
-            out_->setOutput(classified[0]);
+            out_->output(classified[0]);
         } else {
 //            TODO: case for output when there is no both cl and dt
-            qDebug() << "Processor: either classifier or detecor were not specified - nothing to do.";
+            qInfo() << "Either classifier or detector were not specified - nothing to do.";
         }
     }
-    // Actually output stuff.
-    cv::Size s(img.cols, img.rows);
-    out_->update(s);
+
+//    TODO: remove then: testing output
+//    ++i;
+//    boxes.push_back(cv::Rect(i, i, i, i));
+//    out_->output(boxes);
 }
 
 const vector<cv::Mat> Processor::cropImages(const cv::Mat &img, const std::vector<cv::Rect> &boxes) {

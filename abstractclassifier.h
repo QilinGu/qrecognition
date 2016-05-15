@@ -15,5 +15,8 @@ public:
     /* Classify images @imgs and output @topN predictions with highest accuracy. */
     virtual std::vector<std::vector<Prediction> > classify(const std::vector<cv::Mat> &imgs, int topN = 1) = 0;
 
+    /* Returns number of output classes. */
+    virtual int getNumOutputClasses() = 0;
+
     virtual ~AbstractClassifier();
 };

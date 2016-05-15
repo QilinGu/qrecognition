@@ -5,6 +5,7 @@
 
 #include <opencv/cv.hpp>
 
+#include <QTextEdit>
 #include <QImage>
 #include <QPixmap>
 #include <QVector>
@@ -19,27 +20,33 @@
 class DrawingOutput : public AbstractOutput
 {
 public:
-    explicit DrawingOutput(QObject *parent = nullptr);
-    DrawingOutput(QPen pen, QBrush brush, QObject *parent = nullptr);
+    DrawingOutput(QTextEdit *text_box, QObject *parent = nullptr);
+    DrawingOutput(QTextEdit *text_box, QPen pen, QBrush brush, QObject *parent = nullptr);
 
-    void setOutput(const std::vector<std::pair<int, float> > &predictions) override;
-    void setOutput(const std::vector<cv::Rect> &boxes) override;
-    void setOutput(const std::vector<cv::Rect> &boxes,
+    void output(const std::vector<std::pair<int, float> > &predictions) override;
+    void output(const std::vector<cv::Rect> &boxes) override;
+    void output(const std::vector<cv::Rect> &boxes,
                 const std::vector<std::vector<std::pair<int, float> > > &predictions) override;
 
+    /* Update graphic output. */
     void update() override;
-    void update(cv::Size orig_img_size) override;
+
+    /* Update size of the output overlay.
+     * Usually it should be equal to processing image size.
+     * If overlay_size equal cv::Size() then graphic output will be disabled. */
+    void updateOutputSize(cv::Size overlay_size) override;
 
 private:
+    QTextEdit *text_box_;
     QPixmap overlay_;
-    cv::Size orig_img_size_;
+    cv::Size overlay_size_;
     QVector<QRectF> boxes_;
 
     QPen pen_;
     QBrush brush_;
     QPainter p_;
 
-    void resetEmptyOverlay(cv::Size orig_img_size);
+    void resetOverlay(cv::Size overlay_size);
 
     QRectF toQRectF(const cv::Rect &rect) {
         return QRectF(rect.x, rect.y, rect.width, rect.height);

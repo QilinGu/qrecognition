@@ -24,28 +24,20 @@ MainWindow::MainWindow(QWidget *parent)
     , thread2()
     , thread3()
     , thread4()
-    , scene(new QGraphicsScene())
     , capture(new Capture())
     , converter(new Converter())
     , viewer(nullptr)
-    , output(new DrawingOutput())
-    , proc(new Processor(output))
-    , net_dialog(new OpenNetDialog(this))
+    , output(nullptr)
+    , proc(nullptr)
     , ui(new Ui::MainWindow)
 {
     qRegisterMetaType<cv::Mat>();
     ui->setupUi(this);
 
-    ui->graphicsView->setScene(scene);
+    output = new DrawingOutput(ui->textEdit);
+    proc = new Processor(output);
     viewer = new LabelViewer(ui->label);
     converter->setProcessAll(false);
-
-    ui->pushButtonPlay->setEnabled(false);
-    ui->sliderSeek->setRange(0, 0);
-
-    connect(ui->pushButtonOpenClassifier, &QPushButton::clicked, proc, &Processor::initClassifier);
-    connect(ui->pushButtonOpenDetector, &QPushButton::clicked, proc, &Processor::initDetector);
-    connect(ui->pushButtonStartCl, &QPushButton::clicked, proc, &Processor::changeStateProcessing);
 
     connect(ui->pushButtonOpenVideo, &QPushButton::clicked, this, &MainWindow::setVideo);
     connect(ui->pushButtonOpenImage, &QPushButton::clicked, this, &MainWindow::setImage);
@@ -59,10 +51,28 @@ MainWindow::MainWindow(QWidget *parent)
     connect(capture, &Capture::positionChanged, this, &MainWindow::positionChanged);
     connect(capture, &Capture::durationChanged, this, &MainWindow::durationChanged);
     connect(capture, &Capture::playbackSpeedChanged, this, &MainWindow::playbackSpeedChanged);
+    ui->pushButtonPlay->setEnabled(false);
     ui->pushButtonSetDefSpeed->setEnabled(false);
     ui->sliderSpeed->setRange(1, 121);
     ui->sliderSpeed->setEnabled(false);
     ui->sliderSeek->setEnabled(false);
+
+    connect(ui->pushButtonOpenClassifier, &QPushButton::clicked, proc, &Processor::initClassifier);
+    connect(ui->pushButtonOpenDetector, &QPushButton::clicked, proc, &Processor::initDetector);
+    connect(ui->pushButtonStartCl, &QPushButton::clicked, proc, &Processor::changeStateProcessing);
+//    connect(ui->pushButtonOpenLabels, &QPushButton::clicked, proc, &Processor::openLabels);
+    connect(ui->pushButtonOpenLabels, &QPushButton::clicked, [this](){proc->openLabels(this);});
+    QString statusOn("Loaded");
+    QString statusOff("Not Loaded");
+    connect(proc, &Processor::classifierOpened, [this, statusOn, statusOff](bool checked) {
+        checked ? ui->lineEditClassifierStatus->setText(statusOn) : ui->lineEditClassifierStatus->setText(statusOff);
+    });
+    connect(proc, &Processor::detectorOpened, [this, statusOn, statusOff](bool checked) {
+        checked ? ui->lineEditDetectorStatus->setText(statusOn) : ui->lineEditDetectorStatus->setText(statusOff);
+    });
+    connect(proc, &Processor::labelsOpened, [this, statusOn, statusOff](bool checked) {
+        checked ? ui->lineEditLabelsStatus->setText(statusOn) : ui->lineEditLabelsStatus->setText(statusOff);
+    });
 
     qDebug() << "main thread " << QThread::currentThreadId();
 //    TODO: remove then: not implemented yet
@@ -104,7 +114,7 @@ void MainWindow::initSupportedFormats() {
     supported_img_formats_.push_back("tif");
     supported_img_formats_.push_back("tiff");
 
-    // Not checked
+    // Depends on codecs presence
     supported_video_formats_.push_back("mkv");
     supported_video_formats_.push_back("avi");
     supported_video_formats_.push_back("mp4");
@@ -114,7 +124,6 @@ void MainWindow::initSupportedFormats() {
     supported_video_formats_.push_back("mpeg");
     supported_video_formats_.push_back("m4v");
     supported_video_formats_.push_back("3gp");
-
 }
 
 QString MainWindow::formatsToPatterns(const std::vector<string> &formats) {
@@ -139,15 +148,6 @@ MainWindow::~MainWindow()
     thread3.wait();
     thread4.wait();
     delete ui;
-}
-
-bool MainWindow::eventFilter(QObject *obj, QEvent *ev) {
-    if (obj == ui->graphicsView->viewport()) {
-        if (ev->type() == QEvent::Scroll || ev->type() == QEvent::Wheel || ev->type() == QEvent::GraphicsSceneWheel) {
-            return true;
-        }
-    }
-    return false;
 }
 
 void MainWindow::resizeEvent(QResizeEvent *event) {

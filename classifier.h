@@ -22,6 +22,8 @@ public:
     /* Classify images @imgs and output @topN predictions with highest accuracy. */
     std::vector<std::vector<Prediction> > classify(const std::vector<cv::Mat> &imgs, int topN = 5) override;
 
+    int getNumOutputClasses() override;
+
 private:
     std::shared_ptr<caffe::Net<float> > net_;
     int num_channels_;
