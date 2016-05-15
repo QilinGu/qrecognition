@@ -20,11 +20,11 @@ LabelViewer::LabelViewer(QLabel *display, QObject *parent)
 void LabelViewer::displayImage(const QImage &img) {
     if (!img.isNull()) {
 
-        //TODO: remove then
-        auto now = std::chrono::high_resolution_clock::now();
-        auto now_ms = std::chrono::time_point_cast<std::chrono::milliseconds>(now);
-        auto val = now_ms.time_since_epoch();
-        long dur = val.count();
+//        TODO: remove then
+//        auto now = std::chrono::high_resolution_clock::now();
+//        auto now_ms = std::chrono::time_point_cast<std::chrono::milliseconds>(now);
+//        auto val = now_ms.time_since_epoch();
+//        long dur = val.count();
 //        qDebug() << "Viewer: frame presented at" << dur;
 
         image_ = QPixmap::fromImage(img);

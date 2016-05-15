@@ -1,6 +1,5 @@
 #pragma once
 
-#include <QMutex>
 #include <QObject>
 #include <QImage>
 #include <QPixmap>
@@ -22,5 +21,4 @@ private:
     QLabel *fg_display_;
     QPixmap image_;
     QPixmap overlay_;
-    QMutex mutex_;
 };

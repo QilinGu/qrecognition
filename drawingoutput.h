@@ -28,12 +28,8 @@ public:
     void output(const std::vector<cv::Rect> &boxes,
                 const std::vector<std::vector<std::pair<int, float> > > &predictions) override;
 
-    /* Update graphic output. */
     void update() override;
 
-    /* Update size of the output overlay.
-     * Usually it should be equal to processing image size.
-     * If overlay_size equal cv::Size() then graphic output will be disabled. */
     void updateOutputSize(cv::Size overlay_size) override;
 
 private:

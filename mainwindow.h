@@ -25,9 +25,9 @@ public:
     ~MainWindow();
 
 public slots:
-    void setVideo();
-    void setImage();
-    void setCamera();
+    void openVideo();
+    void openImage();
+    void openCamera();
 
     void positionChanged(qint64 pos);
     void durationChanged(qint64 dur);

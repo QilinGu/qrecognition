@@ -5,7 +5,6 @@
 #include <QBasicTimer>
 
 #include <opencv2/opencv.hpp>
-//#include <opencv/cv.hpp>
 
 class Capture : public QObject
 {
@@ -21,14 +20,33 @@ signals:
     void playbackSpeedChanged(int fps);
 
 public slots:
+    /* Process image.
+     * @param file path to image file. */
     void startImage(const QString &file);
+
+    /* Start processing video.
+     * @param file path to video file. */
     void startVideo(const QString &file);
+
+    /* Start processing video stream from camera.
+     * @param cam camera id (if 0 then choose the default camera. */
     void startCamera(int cam = 0);
 
+    /* Stop processing. */
     void stop();
+
+    /* Change state of processing: if processing, then stop and otherwise. */
     void changeStatePlaying();
+
+    /* Change position of processing the video: set it to particular frame.
+     * @param to_frame frame to which set position. */
     void changeVideoPos(int to_frame);
+
+    /* Change the speed of video processing.
+     * @param fps frames per second. */
     void changePlaybackSpeed(int fps);
+
+    /* Set processing speed to default value. */
     void setDefaultPlaybackSpeed();
 
 private:

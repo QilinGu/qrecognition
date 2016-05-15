@@ -53,7 +53,7 @@ void Capture::timerEvent(QTimerEvent *ev) {
     }
 
     //TODO: remove then
-    if (frame.empty()) qDebug() << "cv::Mat in Capture is null!";
+    if (frame.empty()) qDebug() << "Capture: cv::Mat is null!";
 
 //        string file = "/home/gkirg/projects/compvis/analyze/own_data/00001.ppm";
 //        cv::Mat direct = cv::imread(file);
